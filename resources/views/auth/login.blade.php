@@ -8,9 +8,12 @@
         <title>Sign In | POS</title>
 
         <!-- Favicon -->
-        <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/img/favicon.png') }}">
-        <!-- Apple Touch Icon -->
-        <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/apple-touch-icon.png') }}">
+        <link rel="shortcut icon" type="image/x-icon" href="{{ asset('assets/img/favicon/favicon.ico') }}">
+        <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('assets/img/favicon/apple-touch-icon.png') }}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('assets/img/favicon/favicon-32x32.png') }}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/img/favicon/favicon-16x16.png') }}">
+        <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+
         <!-- Bootstrap CSS -->
         <link rel="stylesheet" href="{{ asset('assets/css/bootstrap.min.css') }}">
         <!-- Fontawesome CSS -->
@@ -20,7 +23,6 @@
         <link rel="stylesheet" href="{{ asset('assets/plugins/tabler-icons/tabler-icons.min.css') }}">
         <!-- Main CSS -->
         <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
-
     </head>
     <body class="account-page bg-white">
         <div id="global-loader" >
@@ -38,15 +40,16 @@
                                 @method('POST')
                                 <div class="login-userset">
                                     <div class="login-logo logo-normal">
-                                        <img src="{{ asset('assets/img/logo.svg') }}" alt="img">
+                                        <img src="{{ asset('assets/img/logo/pos-logo-bg-white.png') }}" alt="img">
                                     </div>
                                     <a href="#" class="login-logo logo-white">
-                                        <img src="{{ asset('assets/img/logo-white.svg') }}"  alt="Img">
+                                        <img class="pos-logo" src="{{ asset('assets/img/logo/pos-logo-bg-white.png') }}"  alt="Img">
                                     </a>
                                     <div class="login-userheading">
                                         <h3>Sign In</h3>
                                         <h4>Access the POS panel using your email and passcode.</h4>
                                     </div>
+                                    @include('layouts._message')
                                     <div class="mb-3">
                                         <label class="form-label">Email Address</label>
                                         <div class="input-group">
@@ -68,7 +71,7 @@
                                             <div class="col-6">
                                                 <div class="custom-control custom-checkbox">
                                                     <label class="checkboxs ps-4 mb-0 pb-0 line-height-1">
-                                                        <input type="checkbox">
+                                                        <input id="remember_me" name="remember_me" type="checkbox" checked>
                                                         <span class="checkmarks"></span>Remember me
                                                     </label>
                                                 </div>
