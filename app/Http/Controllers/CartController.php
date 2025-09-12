@@ -36,6 +36,7 @@ class CartController extends Controller
     public function clearCart(): View {
         // Empty will only empty the contents
         LaraCart::emptyCart();
+        LaraCart::removeAttribute('customer_id');
         $cartItems = LaraCart::getItems();
         $customers = Customer::all();
         return view('components.order.cart', compact('cartItems', 'customers'));

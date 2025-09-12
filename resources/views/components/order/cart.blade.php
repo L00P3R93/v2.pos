@@ -54,9 +54,8 @@
                                     <td>
                                         <div class="d-flex align-items-center mb-1">
                                             <h6 class="fs-16 fw-medium">
-                                                <a href="#" data-bs-toggle="modal" data-bs-target="#products">{{ $cartItem->name }}</a>
+                                                <span>{{ $cartItem->name }}</span>
                                             </h6>
-                                            <a href="#" class="ms-2 edit-icon" data-bs-toggle="modal" data-bs-target="#edit-product"><i class="ti ti-edit"></i></a>
                                         </div>
                                         Price : {{ number_format($cartItem->price, 2) }}
                                     </td>

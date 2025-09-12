@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Faker\Providers\KenyaProvider;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -21,6 +22,7 @@ class CategoryFactory extends Factory
         $faker = $this->withFaker();
         $faker->addProvider(new KenyaProvider($faker));
         return [
+            'user_id' => User::query()->inRandomOrder()->first()->id,
             'name' => $name = $faker->unique()->words(3, true),
             'slug' => Str::slug($name),
             'description' => $faker->realText(),

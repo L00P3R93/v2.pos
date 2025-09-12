@@ -36,4 +36,9 @@ class Category extends Model implements HasMedia
     {
         return $this->belongsToMany(Product::class, 'category_product', 'category_id', 'product_id');
     }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

@@ -8,6 +8,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -67,5 +68,30 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         $hash = md5(strtolower(trim($this->email)));
         return "https://www.gravatar.com/avatar/{$hash}?s=200&d=wavatar&r=r";
+    }
+
+    public function orders(): HasMany
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function payments(): HasMany {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function customers(): HasMany {
+        return $this->hasMany(Customer::class);
+    }
+
+    public function products(): HasMany {
+        return $this->hasMany(Product::class);
+    }
+
+    public function categories(): HasMany {
+        return $this->hasMany(Category::class);
+    }
+
+    public function brands(): HasMany {
+        return $this->hasMany(Brand::class);
     }
 }

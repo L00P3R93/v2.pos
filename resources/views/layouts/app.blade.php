@@ -168,7 +168,6 @@
         }
 
         const setCustomer = (id) => {
-            console.log(id);
             postData('/cart/customer', `id=${id}`, '#cart_details');
         }
     </script>

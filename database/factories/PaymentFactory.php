@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use Akaunting\Money\Currency;
 use App\Faker\Providers\KenyaProvider;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -21,6 +22,7 @@ class PaymentFactory extends Factory
         $faker = $this->withFaker();
         $faker->addProvider(new KenyaProvider($faker));
         return [
+            'user_id' => User::query()->inRandomOrder()->first()->id,
             'reference' => 'PAY' . $faker->unique()->randomNumber(6),
             'currency' => $faker->randomElement(collect(Currency::getCurrencies())->keys()),
             'amount' => $faker->randomFloat(2, 100, 2000),

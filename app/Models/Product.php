@@ -46,4 +46,9 @@ class Product extends Model implements HasMedia
     {
         $this->addMediaCollection('product-images')->useDisk('public');
     }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

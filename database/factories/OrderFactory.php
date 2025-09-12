@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Faker\Providers\KenyaProvider;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -21,6 +22,7 @@ class OrderFactory extends Factory
         $faker = $this->withFaker();
         $faker->addProvider(new KenyaProvider($faker));
         return [
+            'user_id' => User::query()->inRandomOrder()->first()->id,
             'number' => 'OR' . $faker->unique()->randomNumber(6),
             'currency' => strtolower($faker->currencyCode()),
             'total_price' => $faker->randomFloat(2, 100, 2000),

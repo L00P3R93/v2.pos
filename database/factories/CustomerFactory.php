@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Faker\Providers\KenyaProvider;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -20,6 +21,7 @@ class CustomerFactory extends Factory
         $faker = $this->withFaker();
         $faker->addProvider(new KenyaProvider($faker));
         return [
+            'user_id' => User::query()->inRandomOrder()->first()->id,
             'name' => $faker->name(),
             'email' => $faker->unique()->safeEmail(),
             'phone' => $faker->unique()->kenyanPhone(),
