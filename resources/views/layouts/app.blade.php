@@ -116,39 +116,32 @@
     <script src="{{ asset('assets/js/theme-colorpicker.js') }}" type="text/javascript"></script>
     <script src="{{ asset('assets/js/calculator.js') }}" type="text/javascript"></script>
     <script src="{{ asset('assets/js/script.js') }}" type="text/javascript"></script>
+    <script src="{{ asset('assets/js/functions.js') }}" type="text/javascript"></script>
     <script>
+        // Increment Decrement
+        $(".inc").on('click', function() {
+            updateValue(this, 1);
+        });
+        $(".dec").on('click', function() {
+            updateValue(this, -1);
+        });
+        function updateValue(obj, delta) {
+            let item = $(obj).parent().find("input");
+            let newValue = parseInt(item.val(), 10) + delta;
+            item.val(Math.max(newValue, 0));
+            let itemHash = $(item).data('item-hash');
+            updateItem(itemHash, newValue);
+        }
         const addToCart = (id) => {
-            $.ajax({
-                url: '/cart/add',
-                type: 'POST',
-                data: { id: id },
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function (response) {
-                    $("#cart_details").html(response);
-                },
-                error: function (xhr) {
-                    console.error("Error adding to cart:", xhr.responseText);
-                }
-            });
+            postData('/cart/add', `id=${id}`, '#cart_details');
         }
 
         const removeItem = (itemHash) => {
-            $.ajax({
-                url: '/cart/remove',
-                type: 'POST',
-                data: { itemHash: itemHash },
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function (response) {
-                    $("#cart_details").html(response);
-                },
-                error: function (xhr) {
-                    console.error("Error adding to cart:", xhr.responseText);
-                }
-            });
+            postData('/cart/remove', `itemHash=${itemHash}`, '#cart_details');
+        }
+
+        const updateItem = (itemHash, quantity) => {
+            postData('/cart/update', `itemHash=${itemHash}&quantity=${quantity}`, '#cart_details');
         }
 
         const clearCart = () => {
@@ -163,9 +156,20 @@
                     $("#cart_details").html(response);
                 },
                 error: function (xhr) {
-                    console.error("Error adding to cart:", xhr.responseText);
+                    console.error("Error clearing cart:", xhr.responseText);
                 }
             });
+        }
+
+        const createCustomer = (form) => {
+            let formData = new FormData(form);
+            postIt('/customer', formData, '.feedbackCustomer', '.processingCustomer');
+            return false;
+        }
+
+        const setCustomer = (id) => {
+            console.log(id);
+            postData('/cart/customer', `id=${id}`, '#cart_details');
         }
     </script>
 </body>

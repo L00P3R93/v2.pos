@@ -1016,31 +1016,6 @@ function toggleFullscreen(elem) {
         $button.closest('.product-quantity').find("input.quntity-input").val(newVal);
 	});
 
-		// Custom Country Code Selector
-
-		if ($('#phone').length > 0) {
-			var input = document.querySelector("#phone");
-			window.intlTelInput(input, {
-				utilsScript: "assets/plugins/intltelinput/js/utils.js",
-			});
-		}
-
-		// Custom Country Code Selector
-
-		if ($('#phone2').length > 0) {
-			var input = document.querySelector("#phone2");
-			window.intlTelInput(input, {
-				utilsScript: "assets/plugins/intltelinput/js/utils.js",
-			});
-		}
-
-		if ($('#phone3').length > 0) {
-			var input = document.querySelector("#phone3");
-			window.intlTelInput(input, {
-				utilsScript: "assets/plugins/intltelinput/js/utils.js",
-			});
-		}
-
 		// Remove Product
 		$(document).on("click",".remove-product",function () {
 			$(this).parent().parent().hide();

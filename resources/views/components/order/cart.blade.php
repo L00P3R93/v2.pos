@@ -3,11 +3,16 @@
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
             <div class="d-flex align-items-center">
                 <h4 class="mb-0">New Order</h4>
-                <span class="badge badge-purple badge-xs fs-10 fw-medium ms-2">#5655898</span>
+                <span class="badge badge-purple badge-xs fs-10 fw-medium ms-2"></span>
             </div>
             <a href="#" class="btn btn-sm btn-outline-primary shadow-primary" data-bs-toggle="modal" data-bs-target="#create">Add Customer</a>
         </div>
-        @include('components.order.customer')
+        <select class="select" onchange="setCustomer(this.value)">
+            <option>Walk in Customer</option>
+            @foreach($customers as $customer)
+                <option {{ selected(strval($customer->id), \LukePOLO\LaraCart\Facades\LaraCart::getAttribute('customer_id'), 'selected') }} value="{{ $customer->id }}">{{ $customer->name }}</option>
+            @endforeach
+        </select>
     </div>
     @if(count($cartItems) === 0)
         <div class="product-wrap">
@@ -18,6 +23,12 @@
                 <p class="fw-bold">No Products Selected</p>
             </div>
         </div>
+        <script>
+            $('.select').select2({
+                minimumResultsForSearch: 10,
+                width: '100%'
+            });
+        </script>
     @else
         <div class="product-added block-section">
             <div class="d-flex align-items-center justify-content-between gap-3 mb-3">
@@ -47,16 +58,16 @@
                                             </h6>
                                             <a href="#" class="ms-2 edit-icon" data-bs-toggle="modal" data-bs-target="#edit-product"><i class="ti ti-edit"></i></a>
                                         </div>
-                                        Price : {{ $cartItem->price }}
+                                        Price : {{ number_format($cartItem->price, 2) }}
                                     </td>
                                     <td>
                                         <div class="qty-item m-0">
-                                            <a href="javascript:void(0);" class="dec d-flex justify-content-center align-items-center" data-bs-toggle="tooltip" data-bs-placement="top" title="minus"><i data-feather="minus-circle" class="feather-14"></i></a>
-                                            <input type="text" class="form-control text-center" name="qty" value="{{ $cartItem->qty }}">
-                                            <a href="javascript:void(0);" class="inc d-flex justify-content-center align-items-center" data-bs-toggle="tooltip" data-bs-placement="top" title="plus"><i data-feather="plus-circle" class="feather-14"></i></a>
+                                            <a class="dec d-flex justify-content-center align-items-center"><i data-feather="minus-circle" class="feather-14"></i></a>
+                                            <input type="text" class="form-control text-center" name="qty" value="{{ $cartItem->qty }}" data-item-hash="{{ $cartItem->getHash() }}">
+                                            <a class="inc d-flex justify-content-center align-items-center"><i data-feather="plus-circle" class="feather-14"></i></a>
                                         </div>
                                     </td>
-                                    <td class="fw-bold">{{ $cartItem->qty * $cartItem->price }}</td>
+                                    <td class="fw-bold">{{ number_format($cartItem->qty * $cartItem->price, 2) }}</td>
                                     <td class="text-end">
                                         <a class="btn-icon" onclick="removeItem('{{ $cartItem->getHash() }}')">
                                             <i class="ti ti-trash"></i>
@@ -99,41 +110,19 @@
             </div>
             <div class="row gx-2">
                 <div class="col-sm-4">
-                    <a href="javascript:void(0);"
-                       class="btn btn-teal d-flex align-items-center justify-content-center w-100 mb-2"
-                       data-bs-toggle="modal" data-bs-target="#discount"><i
-                            class="ti ti-percentage me-2"></i>Discount</a>
-                    <a href="javascript:void(0);"
-                       class="btn btn-orange d-flex align-items-center justify-content-center w-100 mb-2"
-                       data-bs-toggle="modal" data-bs-target="#hold-order"><i
-                            class="ti ti-player-pause me-2"></i>Hold</a>
-                    <a href="javascript:void(0);"
-                       class="btn btn-secondary d-flex align-items-center justify-content-center w-100 mb-2"
-                       data-bs-toggle="modal" data-bs-target="#orders"><i class="ti ti-shopping-cart me-2"></i>View
-                        Orders</a>
+                    <a class="btn btn-teal d-flex align-items-center justify-content-center w-100 mb-2" data-bs-toggle="modal" data-bs-target="#discount"><i class="ti ti-percentage me-2"></i>Discount</a>
+                    <a class="btn btn-orange d-flex align-items-center justify-content-center w-100 mb-2" data-bs-toggle="modal" data-bs-target="#hold-order"><i class="ti ti-player-pause me-2"></i>Hold</a>
+                    <a class="btn btn-secondary d-flex align-items-center justify-content-center w-100 mb-2" data-bs-toggle="modal" data-bs-target="#orders"><i class="ti ti-shopping-cart me-2"></i>View Orders</a>
                 </div>
                 <div class="col-sm-4">
-                    <a href="javascript:void(0);"
-                       class="btn btn-purple d-flex align-items-center justify-content-center w-100 mb-2"
-                       data-bs-toggle="modal" data-bs-target="#order-tax"><i class="ti ti-receipt-tax me-2"></i>Tax</a>
-                    <a href="javascript:void(0);"
-                       class="btn btn-info d-flex align-items-center justify-content-center w-100 mb-2"><i
-                            class="ti ti-trash me-2"></i>Void</a>
-                    <a href="javascript:void(0);"
-                       class="btn btn-indigo d-flex align-items-center justify-content-center w-100 mb-2"
-                       data-bs-toggle="modal" data-bs-target="#reset"><i class="ti ti-reload me-2"></i>Reset</a>
+                    <a class="btn btn-purple d-flex align-items-center justify-content-center w-100 mb-2" data-bs-toggle="modal" data-bs-target="#order-tax"><i class="ti ti-receipt-tax me-2"></i>Tax</a>
+                    <a class="btn btn-info d-flex align-items-center justify-content-center w-100 mb-2"><i class="ti ti-trash me-2"></i>Void</a>
+                    <a class="btn btn-indigo d-flex align-items-center justify-content-center w-100 mb-2" data-bs-toggle="modal" data-bs-target="#reset"><i class="ti ti-reload me-2"></i>Reset</a>
                 </div>
                 <div class="col-sm-4">
-                    <a href="javascript:void(0);"
-                       class="btn btn-pink d-flex align-items-center justify-content-center w-100 mb-2"
-                       data-bs-toggle="modal" data-bs-target="#shipping-cost"><i class="ti ti-package-import me-2"></i>Shipping</a>
-                    <a href="javascript:void(0);"
-                       class="btn btn-cyan d-flex align-items-center justify-content-center w-100 mb-2"
-                       data-bs-toggle="modal" data-bs-target="#payment-completed"><i
-                            class="ti ti-cash-banknote me-2"></i>Payment</a>
-                    <a href="javascript:void(0);"
-                       class="btn btn-danger d-flex align-items-center justify-content-center w-100 mb-2"
-                       data-bs-toggle="modal" data-bs-target="#recents"><i class="ti ti-refresh-dot me-2"></i>Transaction</a>
+                    <a class="btn btn-pink d-flex align-items-center justify-content-center w-100 mb-2" data-bs-toggle="modal" data-bs-target="#shipping-cost"><i class="ti ti-package-import me-2"></i>Shipping</a>
+                    <a class="btn btn-cyan d-flex align-items-center justify-content-center w-100 mb-2" data-bs-toggle="modal" data-bs-target="#payment-completed"><i class="ti ti-cash-banknote me-2"></i>Payment</a>
+                    <a class="btn btn-danger d-flex align-items-center justify-content-center w-100 mb-2" data-bs-toggle="modal" data-bs-target="#recents"><i class="ti ti-refresh-dot me-2"></i>Transaction</a>
                 </div>
             </div>
         </div>
@@ -141,91 +130,56 @@
             <h5 class="mb-2">Select Payment</h5>
             <div class="row align-items-center justify-content-center methods g-2 mb-4">
                 <div class="col-sm-6 col-md-4 col-xl d-flex">
-                    <a href="javascript:void(0);" class="payment-item flex-fill" data-bs-toggle="modal"
-                       data-bs-target="#payment-cash">
+                    <a class="payment-item flex-fill" data-bs-toggle="modal" data-bs-target="#payment-cash">
                         <img src="{{ asset('assets/img/icons/cash-icon.svg') }}" alt="img">
                         <p class="fw-medium">Cash</p>
                     </a>
                 </div>
                 <div class="col-sm-6 col-md-4 col-xl d-flex">
-                    <a href="javascript:void(0);" class="payment-item flex-fill" data-bs-toggle="modal"
-                       data-bs-target="#payment-card">
+                    <a class="payment-item flex-fill" data-bs-toggle="modal" data-bs-target="#payment-card">
                         <img src="{{ asset('assets/img/icons/card.svg') }}" alt="img">
                         <p class="fw-medium">Card</p>
                     </a>
                 </div>
                 <div class="col-sm-6 col-md-4 col-xl d-flex">
-                    <a href="javascript:void(0);" class="payment-item flex-fill" data-bs-toggle="modal"
-                       data-bs-target="#payment-points">
+                    <a class="payment-item flex-fill" data-bs-toggle="modal" data-bs-target="#payment-points">
                         <img src="{{ asset('assets/img/icons/points.svg') }}" alt="img">
-                        <p class="fw-medium">Points</p>
-                    </a>
-                </div>
-                <div class="col-sm-6 col-md-4 col-xl d-flex">
-                    <a href="javascript:void(0);" class="payment-item flex-fill" data-bs-toggle="modal"
-                       data-bs-target="#payment-deposit">
-                        <img src="{{ asset('assets/img/icons/deposit.svg') }}" alt="img">
-                        <p class="fw-medium">Deposit</p>
-                    </a>
-                </div>
-                <div class="col-sm-6 col-md-4 col-xl d-flex">
-                    <a href="javascript:void(0);" class="payment-item flex-fill" data-bs-toggle="modal"
-                       data-bs-target="#payment-cheque">
-                        <img src="{{ asset('assets/img/icons/cheque.svg') }}" alt="img">
-                        <p class="fw-medium">Cheque</p>
+                        <p class="fw-medium">M-PESA</p>
                     </a>
                 </div>
             </div>
             <div class="btn-block m-0">
                 <a class="btn btn-teal w-100" href="javascript:void(0);">
-                    Pay : $56590.00
+                    Pay : {{ \LukePOLO\LaraCart\Facades\LaraCart::total() }}
                 </a>
             </div>
         </div>
+        <script>
+            feather.replace();
+
+            $('.select').select2({
+                minimumResultsForSearch: 10,
+                width: '100%'
+            });
+
+            // Increment Decrement
+            $(".inc").on('click', function() {
+                updateValue(this, 1);
+            });
+            $(".dec").on('click', function() {
+                updateValue(this, -1);
+            });
+            function updateValue(obj, delta) {
+                let item = $(obj).parent().find("input");
+                let newValue = parseInt(item.val(), 10) + delta;
+                item.val(Math.max(newValue, 0));
+                let itemHash = $(item).data('item-hash');
+                updateItem(itemHash, newValue);
+            }
+        </script>
+
     @endif
 </aside>
-
-<script>
-    feather.replace();
-    $('.select').select2({
-        minimumResultsForSearch: 10,
-        width: '100%'
-    });
-    //Increment Decrement value
-    $('.inc.button').click(function(){
-        var $this = $(this),
-            $input = $this.prev('input'),
-            $parent = $input.closest('div'),
-            newValue = parseInt($input.val())+1;
-        $parent.find('.inc').addClass('a'+newValue);
-        $input.val(newValue);
-        newValue += newValue;
-    });
-    $('.dec.button').click(function(){
-        var $this = $(this),
-            $input = $this.next('input'),
-            $parent = $input.closest('div'),
-            newValue = parseInt($input.val())-1;
-        console.log($parent);
-        $parent.find('.inc').addClass('a'+newValue);
-        $input.val(newValue);
-        newValue += newValue;
-    });
-
-    // Increment Decrement
-
-    $(".inc").on('click', function() {
-        updateValue(this, 1);
-    });
-    $(".dec").on('click', function() {
-        updateValue(this, -1);
-    });
-    function updateValue(obj, delta) {
-        var item = $(obj).parent().find("input");
-        var newValue = parseInt(item.val(), 10) + delta;
-        item.val(Math.max(newValue, 0));
-    }
-</script>
 
 
 

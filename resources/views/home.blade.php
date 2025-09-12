@@ -46,5 +46,4 @@
 @endsection
 
 @section('script')
-
 @endsection

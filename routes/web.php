@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -12,7 +14,13 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth', 'checkSession'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
-    Route::post('/cart/add', [HomeController::class, 'addToCart'])->name('cart.add');
-    Route::post('/cart/remove', [HomeController::class, 'removeItem'])->name('cart.remove');
-    Route::get('/cart/clear', [HomeController::class, 'clearCart'])->name('cart.clear');
+
+    // Cart routes
+    Route::post('/cart/add', [CartController::class, 'addToCart'])->name('cart.add');
+    Route::post('/cart/update', [CartController::class, 'updateItem'])->name('cart.update');
+    Route::post('/cart/remove', [CartController::class, 'removeItem'])->name('cart.remove');
+    Route::get('/cart/clear', [CartController::class, 'clearCart'])->name('cart.clear');
+    Route::post('/cart/customer', [CartController::class, 'attachCustomer'])->name('cart.customer');
+
+    Route::post('/customer', [CustomerController::class, 'store'])->name('customer.store');
 });
