@@ -3,6 +3,7 @@
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\HomeController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
@@ -12,7 +13,15 @@ Route::get('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/login', [AuthController::class, 'authenticate']);
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
-Route::middleware(['auth', 'checkSession'])->group(function () {
+/*Route::get('/verify-email/{id}/{hash}', [AuthController::class, 'verify'])->name('verification.verify');
+
+Route::get('/email/verification-notification', function () {
+    return view('auth.emails.verify-email');
+})->middleware(['auth'])->name('verification.notice');*/
+
+Auth::routes([ 'verify' => true ]);
+
+Route::middleware(['auth', 'verified', 'checkSession'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
 
     // Cart routes
@@ -24,3 +33,5 @@ Route::middleware(['auth', 'checkSession'])->group(function () {
 
     Route::post('/customer', [CustomerController::class, 'store'])->name('customer.store');
 });
+
+

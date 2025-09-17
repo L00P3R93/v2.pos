@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserStatus;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,6 +33,26 @@ class AuthController extends Controller
         }
         // If authentication fails, redirect back with an error message
         return back()->with('error', 'Invalid email or password');
+    }
+
+    public function verify($userId, $hash)
+    {
+        $user = User::query()->findOrFail($userId);
+
+        // Check if hash is valid
+        if(sha1($user->email) !== $hash)
+            return redirect()->route('login')->with('error', 'Invalid verification link');
+
+        // Check if email is already verified
+        if($user->email_verified_at)
+            return redirect()->route('login')->with('info', 'Email already verified. Please login.');
+
+        // Mark email as verified and activate user
+        $user->email_verified_at = now();
+        $user->status = UserStatus::Active;
+        $user->save();
+
+        return redirect()->route('login')->with('success', 'Email verified successfully. You can now login.');
     }
 
     public function logout(Request $request): RedirectResponse {

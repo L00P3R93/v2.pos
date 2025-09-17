@@ -7,6 +7,7 @@ use App\Enums\UserStatus;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -14,7 +15,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser, HasAvatar
+class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasRoles, HasApiTokens;
@@ -28,6 +29,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'name',
         'email',
         'password',
+        'status',
+        'email_verified_at',
     ];
 
     /**
@@ -56,7 +59,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return ($this->status === UserStatus::Active) && $this->with('roles');
+        //return ($this->status === UserStatus::Active) && $this->with('roles');
+        return $this->hasVerifiedEmail() && $this->hasAnyRole(['Admin', 'Manager', 'Accountant', 'Inventory']) && $this->status === UserStatus::Active;
     }
 
     public function getFilamentAvatarUrl(): ?string

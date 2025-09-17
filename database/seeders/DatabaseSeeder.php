@@ -50,7 +50,6 @@ class DatabaseSeeder extends Seeder
             'phone' => '254727796831',
             'status' => 'active',
             'is_admin' => true,
-            'email_verified_at' => now(),
             'password' => Hash::make('Asdf@1234'),
             'remember_token' => Str::random(10),
         ]))->first();
