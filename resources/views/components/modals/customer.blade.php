@@ -8,8 +8,6 @@
                 </button>
             </div>
             <form onsubmit="createCustomer(this)">
-                @method('POST')
-                @csrf
                 <div class="modal-body pb-1">
                     <div class="row">
                         <div class="col-lg-6 col-sm-12 col-12">

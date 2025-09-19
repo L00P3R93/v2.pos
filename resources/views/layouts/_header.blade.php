@@ -44,14 +44,8 @@
                 <i class="ti ti-maximize"></i>
             </a>
         </li>
-        <li class="nav-item nav-item-box" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Cash Register">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#cash-register"><i class="ti ti-cash"></i></a>
-        </li>
         <li class="nav-item nav-item-box" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Today’s Sale">
             <a href="#" data-bs-toggle="modal" data-bs-target="#today-sale"><i class="ti ti-progress"></i></a>
-        </li>
-        <li class="nav-item nav-item-box" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="Today’s Profit">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#today-profit"><i class="ti ti-chart-infographic"></i></a>
         </li>
 
         <li class="nav-item dropdown has-arrow main-drop profile-nav">
@@ -91,7 +85,10 @@
         <div class="dropdown-menu dropdown-menu-right">
             <a class="dropdown-item" href="#">My Profile</a>
             <a class="dropdown-item" href="#">Settings</a>
-            <a class="dropdown-item" href="{{ route('logout') }}">Logout</a>
+            <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                @csrf
+            </form>
         </div>
     </div>
     <!-- /Mobile Menu -->

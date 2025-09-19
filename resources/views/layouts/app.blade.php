@@ -162,14 +162,20 @@
         }
 
         const createCustomer = (form) => {
+            event.preventDefault();
             let formData = new FormData(form);
-            postIt('/customer', formData, '.feedbackCustomer', '.processingCustomer');
+            postIt('/customer', formData, '#cart_details');
             return false;
         }
 
         const setCustomer = (id) => {
             postData('/cart/customer', `id=${id}`, '#cart_details');
         }
+
+        $('.select').select2({
+            minimumResultsForSearch: 10,
+            width: '100%'
+        });
     </script>
 </body>
 </html>

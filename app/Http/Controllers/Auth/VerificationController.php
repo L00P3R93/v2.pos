@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\VerifiesEmails;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 class VerificationController extends Controller
 {
@@ -37,5 +41,25 @@ class VerificationController extends Controller
         $this->middleware('auth');
         $this->middleware('signed')->only('verify');
         $this->middleware('throttle:6,1')->only('verify', 'resend');
+    }
+
+    public function verify(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail())
+        {
+            return redirect($this->redirectPath())->with('info', 'Email already verified. Please login!');
+        }
+
+        if($user->markEmailAsVerified())
+        {
+            event(new Verified($user));
+
+            $user->status = UserStatus::Active;
+            $user->save();
+        }
+
+        return redirect($this->redirectPath())->with('success', 'Email verified successfully. You are logged in.');
     }
 }

@@ -6,6 +6,19 @@
                 <span class="badge badge-purple badge-xs fs-10 fw-medium ms-2"></span>
             </div>
             <a href="#" class="btn btn-sm btn-outline-primary shadow-primary" data-bs-toggle="modal" data-bs-target="#create">Add Customer</a>
+            @if(session()->has('customer_success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong>{{ session('customer_success') }}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if(session()->has('customer_error'))
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <strong>{{ session('customer_error') }}</strong>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
         </div>
         <select class="select" onchange="setCustomer(this.value)">
             <option>Walk in Customer</option>

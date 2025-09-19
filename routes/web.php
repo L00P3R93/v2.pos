@@ -9,16 +9,6 @@ use App\Http\Controllers\AuthController;
 
 Route::get('/', [\App\Http\Controllers\IndexController::class, 'index']);
 
-Route::get('/login', [AuthController::class, 'login'])->name('login');
-Route::post('/login', [AuthController::class, 'authenticate']);
-Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
-
-/*Route::get('/verify-email/{id}/{hash}', [AuthController::class, 'verify'])->name('verification.verify');
-
-Route::get('/email/verification-notification', function () {
-    return view('auth.emails.verify-email');
-})->middleware(['auth'])->name('verification.notice');*/
-
 Auth::routes([ 'verify' => true ]);
 
 Route::middleware(['auth', 'verified', 'checkSession'])->group(function () {
