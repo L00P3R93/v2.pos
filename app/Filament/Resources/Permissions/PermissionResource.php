@@ -23,7 +23,7 @@ class PermissionResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static string | UnitEnum | null $navigationGroup = 'Settings';
+    protected static string | UnitEnum | null $navigationGroup = 'User Management';
     protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,8 +14,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 class Category extends Model implements HasMedia
 {
     /** @use HasFactory<\Database\Factories\CategoryFactory> */
-    use HasFactory;
-    use InteractsWithMedia;
+    use HasFactory, Auditable, InteractsWithMedia;
 
     protected $table = 'categories';
 

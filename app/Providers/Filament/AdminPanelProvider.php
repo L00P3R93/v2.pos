@@ -8,9 +8,11 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use App\Filament\Pages\Dashboard;
+use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -48,6 +50,21 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
                 FilamentInfoWidget::class,
+            ])
+            ->navigationGroups([
+                'Dashboard',
+                'Products',
+                'Shop',
+                'User Management',
+                'System Management'
+            ])
+            ->navigationItems([
+                NavigationItem::make('System Logs')
+                    ->url('/log-viewer')
+                    ->icon(Heroicon::OutlinedDocumentText)
+                    ->group('System Management')
+                    ->sort(50)
+                    ->visible(fn () => auth()->user()?->isAdmin()),
             ])
             ->unsavedChangesAlerts()
             ->databaseNotifications()

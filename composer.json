@@ -19,6 +19,7 @@
         "laravel/ui": "^4.6",
         "livewire/livewire": "^3.6",
         "lukepolo/laracart": "^2.6",
+        "opcodesio/log-viewer": "^3.21",
         "spatie/laravel-permission": "^6.21",
         "squirephp/countries-en": "^3.3",
         "squirephp/currencies-en": "^3.3"
