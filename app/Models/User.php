@@ -61,7 +61,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
     public function canAccessPanel(Panel $panel): bool
     {
         //return ($this->status === UserStatus::Active) && $this->with('roles');
-        return $this->hasVerifiedEmail() && $this->hasAnyRole(['Admin', 'Manager', 'Accountant', 'Inventory']) && $this->status === UserStatus::Active;
+        return $this->status === UserStatus::Active;
     }
 
     public function getFilamentAvatarUrl(): ?string
@@ -76,7 +76,11 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
     }
 
     public function isAdmin(): bool {
-        return auth()->user()->hasRole('Admin');
+        return auth()->user()->hasAnyRole(['Admin', 'Super Admin']);
+    }
+
+    public function isSuperAdmin(): bool {
+        return auth()->user()->hasRole('Super Admin');
     }
 
     public function orders(): HasMany

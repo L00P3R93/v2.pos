@@ -15,7 +15,7 @@ class UserObserver
     {
         // Send verification email
         $verificationUrl = url('/verify-email/'.$user->id.'/'.sha1($user->email));
-        Mail::to($user->email)->send(new VerificationMail($verificationUrl));
+        // Mail::to($user->email)->send(new VerificationMail($verificationUrl));
     }
 
     /**

@@ -44,17 +44,17 @@ class DatabaseSeeder extends Seeder
 
         // Create Admin User
         $this->command->warn(PHP_EOL . 'Creating Admin User...');
-        $admin = $this->withProgressBar(1, fn () => User::factory(1)->create([
+        $admin = User::updateOrCreate([
             'name' => 'Sntaks Admin',
             'email' => 'sntaksolutionsltd@gmail.com',
             'phone' => '254727796831',
-            'status' => 'active',
-            'is_admin' => true,
+            'email_verified_at' => now(),
             'password' => Hash::make('Asdf@1234'),
             'remember_token' => Str::random(10),
-        ]))->first();
-        $admin->assignRole('Admin');
-        $this->command->info("Admin {$admin->name} created and assigned to 'Admin' role.");
+            'status' => 'active',
+        ]);
+        $admin->assignRole('Super Admin');
+        $this->command->info("Super Admin {$admin->name} created and assigned to 'Super Admin' role.");
 
         // Create Non-Admin Users
         $this->command->warn(PHP_EOL . 'Creating Non-Admin Users...');

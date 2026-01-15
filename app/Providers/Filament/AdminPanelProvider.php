@@ -64,7 +64,7 @@ class AdminPanelProvider extends PanelProvider
                     ->icon(Heroicon::OutlinedDocumentText)
                     ->group('System Management')
                     ->sort(50)
-                    ->visible(fn () => auth()->user()?->isAdmin()),
+                    ->visible(fn () => auth()->user()?->isSuperAdmin()),
             ])
             ->unsavedChangesAlerts()
             ->databaseNotifications()
