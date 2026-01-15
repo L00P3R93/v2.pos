@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Users\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -24,7 +25,7 @@ class UsersTable
                     ->label('Avatar')
                     ->getStateUsing(fn ($record): ?string => $record->gravatar_url)
                     ->circular()
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('name')
                     ->label('Full name')
                     ->sortable()
@@ -65,7 +66,8 @@ class UsersTable
                     ->sortable()
                     ->badge(),
                 IconColumn::make('is_admin')
-                    ->boolean(),
+                    ->boolean()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -94,7 +96,7 @@ class UsersTable
                     ]),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()->iconButton()->icon(Heroicon::OutlinedPencilSquare)->color('warning')->tooltip('Edit User'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
