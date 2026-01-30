@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Order;
 use App\Models\User;
+use App\Observers\OrderObserver;
 use App\Observers\UserObserver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\URL;
@@ -28,5 +30,6 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
         User::observe(UserObserver::class);
+        Order::observe(OrderObserver::class);
     }
 }

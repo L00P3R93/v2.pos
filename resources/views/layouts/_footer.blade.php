@@ -11,7 +11,7 @@
         <div class="modal-content">
             <div class="modal-body p-0">
                 <div class="success-wrap text-center">
-                    <form action="https://dreamspos.dreamstechnologies.com/html/template/#">
+                    <form action="#">
                         <div class="icon-success bg-success text-white mb-2">
                             <i class="ti ti-check"></i>
                         </div>
@@ -42,7 +42,7 @@
                 <div class="text-center info text-center">
                     <h6>Dreamguys Technologies Pvt Ltd.,</h6>
                     <p class="mb-0">Phone Number: +1 5656665656</p>
-                    <p class="mb-0">Email: <a href="https://dreamspos.dreamstechnologies.com/cdn-cgi/l/email-protection#46233e272b362a2306212b272f2a6825292b"><span class="__cf_email__" data-cfemail="5d38253c302d31381d3a303c3431733e3230">[email&#160;protected]</span></a></p>
+                    <p class="mb-0">Email: <a href=""><span class="__cf_email__" data-cfemail="5d38253c302d31381d3a303c3431733e3230">[email&#160;protected]</span></a></p>
                 </div>
                 <div class="tax-invoice">
                     <h6 class="text-center">Tax Invoice</h6>
@@ -148,7 +148,7 @@
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <form action="https://dreamspos.dreamstechnologies.com/html/template/#">
+            <form onsubmit="return false;">
                 <div class="modal-body">
                     <div class="bg-light br-10 p-4 text-center mb-3">
                         <h2 class="display-1">4500.00</h2>
@@ -892,7 +892,7 @@
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <form action="https://dreamspos.dreamstechnologies.com/html/template/#">
+            <form onsubmit="checkoutOrder('cash'); return false;">
                 <div class="modal-body pb-1">
                     <div class="row">
                         <div class="col-md-4">
@@ -1027,7 +1027,7 @@
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <form action="https://dreamspos.dreamstechnologies.com/html/template/#">
+            <form onsubmit="checkoutOrder('card'); return false;">
                 <div class="modal-body pb-1">
                     <div class="row">
                         <div class="col-md-4">
@@ -1162,7 +1162,7 @@
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <form action="https://dreamspos.dreamstechnologies.com/html/template/#">
+            <form onsubmit="checkoutOrder('cheque'); return false;">
                 <div class="modal-body pb-1">
                     <div class="row">
                         <div class="col-md-4">
@@ -1297,7 +1297,7 @@
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <form action="https://dreamspos.dreamstechnologies.com/html/template/#">
+            <form onsubmit="checkoutOrder('deposit'); return false;">
                 <div class="modal-body pb-1">
                     <div class="row">
                         <div class="col-md-4">
@@ -1432,7 +1432,7 @@
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <form action="https://dreamspos.dreamstechnologies.com/html/template/#">
+            <form onsubmit="checkoutOrder('points'); return false;">
                 <div class="modal-body pb-1">
                     <div class="row">
                         <div class="col-md-4">
@@ -1567,7 +1567,7 @@
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <form action="https://dreamspos.dreamstechnologies.com/html/template/#">
+            <form onsubmit="return false;">
                 <div class="modal-body pb-1">
                     <div class="mb-3">
                         <label class="form-label">Order Tax <span class="text-danger">*</span></label>
@@ -1601,7 +1601,7 @@
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <form action="https://dreamspos.dreamstechnologies.com/html/template/#">
+            <form onsubmit="return false;">
                 <div class="modal-body pb-1">
                     <div class="mb-3">
                         <label class="form-label">Shipping Cost <span class="text-danger">*</span></label>
@@ -1628,7 +1628,7 @@
                     <span aria-hidden="true">×</span>
                 </button>
             </div>
-            <form action="https://dreamspos.dreamstechnologies.com/html/template/#">
+            <form onsubmit="return false;">
                 <div class="modal-body pb-1">
                     <div class="mb-3">
                         <label class="form-label">Order Discount Type <span class="text-danger">*</span></label>
@@ -1652,60 +1652,6 @@
     </div>
 </div>
 <!-- /Discount -->
-
-<!-- Calculator -->
-<div class="modal fade pos-modal" id="calculator" tabindex="-1"  aria-hidden="true">
-    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-body p-0">
-                <div class="calculator-wrap">
-                    <div class="p-3">
-                        <div class="d-flex align-items-center">
-                            <h3>Calculator</h3>
-                            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">×</span>
-                            </button>
-                        </div>
-                        <div>
-                            <input class="input" type="text" placeholder="0" readonly>
-                        </div>
-                    </div>
-                    <div class="calculator-body d-flex justify-content-between">
-                        <div class="text-center">
-                            <button class="btn btn-clear" onclick="if (!window.__cfRLUnblockHandlers) return false; clr()" data-cf-modified-df3694c25d2722345a4d207b-="">C</button>
-                            <button class="btn btn-number" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('7')" data-cf-modified-df3694c25d2722345a4d207b-="">7</button>
-                            <button class="btn btn-number" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('4')" data-cf-modified-df3694c25d2722345a4d207b-="">4</button>
-                            <button class="btn btn-number" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('1')" data-cf-modified-df3694c25d2722345a4d207b-="">1</button>
-                            <button class="btn btn-number" onclick="if (!window.__cfRLUnblockHandlers) return false; dis(',')" data-cf-modified-df3694c25d2722345a4d207b-="">,</button>
-                        </div>
-                        <div class="text-center">
-                            <button class="btn btn-expression" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('https://dreamspos.dreamstechnologies.com/')" data-cf-modified-df3694c25d2722345a4d207b-="">÷</button>
-                            <button class="btn btn-number" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('8')" data-cf-modified-df3694c25d2722345a4d207b-="">8</button>
-                            <button class="btn btn-number" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('5')" data-cf-modified-df3694c25d2722345a4d207b-="">5</button>
-                            <button class="btn btn-number" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('2')" data-cf-modified-df3694c25d2722345a4d207b-="">2</button>
-                            <button class="btn btn-number" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('00')" data-cf-modified-df3694c25d2722345a4d207b-="">00</button>
-                        </div>
-                        <div class="text-center">
-                            <button class="btn btn-expression" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('%')" data-cf-modified-df3694c25d2722345a4d207b-="">%</button>
-                            <button class="btn btn-number" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('9')" data-cf-modified-df3694c25d2722345a4d207b-="">9</button>
-                            <button class="btn btn-number" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('6')" data-cf-modified-df3694c25d2722345a4d207b-="">6</button>
-                            <button class="btn btn-number" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('3')" data-cf-modified-df3694c25d2722345a4d207b-="">3</button>
-                            <button class="btn btn-number" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('.')" data-cf-modified-df3694c25d2722345a4d207b-="">.</button>
-                        </div>
-                        <div class="text-center">
-                            <button class="btn btn-clear" onclick="if (!window.__cfRLUnblockHandlers) return false; back()" data-cf-modified-df3694c25d2722345a4d207b-=""><i class="ti ti-backspace"></i></button>
-                            <button class="btn btn-expression" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('*')" data-cf-modified-df3694c25d2722345a4d207b-="">x</button>
-                            <button class="btn btn-expression" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('-')" data-cf-modified-df3694c25d2722345a4d207b-="">-</button>
-                            <button class="btn btn-expression" onclick="if (!window.__cfRLUnblockHandlers) return false; dis('+')" data-cf-modified-df3694c25d2722345a4d207b-="">+</button>
-                            <button class="btn btn-clear" onclick="if (!window.__cfRLUnblockHandlers) return false; solve()" data-cf-modified-df3694c25d2722345a4d207b-="">=</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- /Calculator -->
 
 <!-- Cash Register Details -->
 <div class="modal fade pos-modal" id="cash-register" tabindex="-1"  aria-hidden="true">

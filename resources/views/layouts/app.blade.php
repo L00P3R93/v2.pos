@@ -172,6 +172,13 @@
             postData('/cart/customer', `id=${id}`, '#cart_details');
         }
 
+        const checkoutOrder = (method) => {
+            postData('/order/checkout', `method=${encodeURIComponent(method)}`, '#cart_details');
+            $("#payment-card").modal('hide');
+            $("#payment-cash").modal('hide');
+            $("#payment-cheque").modal('hide');
+        }
+
         $('.select').select2({
             minimumResultsForSearch: 10,
             width: '100%'

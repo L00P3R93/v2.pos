@@ -15,7 +15,7 @@ class OrderObserver
         // If quantity of product is less than quantity of order, throw exception
         foreach ($order->items as $orderItem) {
             $product = $orderItem->product;
-            if ($product->qty < $orderItem->quantity) {
+            if ($product->qty < $orderItem->qty) {
                 throw new \Exception('Not enough stock for product: ' . $product->name);
             }
         }
@@ -32,17 +32,17 @@ class OrderObserver
         $shippingCost = 0;
 
         foreach ($orderItems as $orderItem) {
-            $totalPrice += $orderItem->price * $orderItem->quantity;
+            $totalPrice += $orderItem->unit_price * $orderItem->qty;
             $shippingCost += $totalPrice * 0.1; // 10% shipping cost
 
             // Update inventory
             $product = $orderItem->product;
-            $product->qty -= $orderItem->quantity;
+            $product->qty -= $orderItem->qty;
             $product->save();
         }
 
         $order->total_price = $totalPrice;
-        $order->shipping_cost = $shippingCost;
+        $order->shipping_price = $shippingCost;
         $order->save();
     }
 

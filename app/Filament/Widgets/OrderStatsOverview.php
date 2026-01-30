@@ -34,7 +34,7 @@ class OrderStatsOverview extends StatsOverviewWidget
             Stat::make('', Order::count())->chart(
                 $orderData->map(fn (TrendValue $value) => $value->aggregate)->toArray()
             )->color('success')->description('Total Orders')->descriptionIcon('heroicon-m-arrow-trending-up'),
-            Stat::make('', Order::query()->whereIn('status', ['open', 'processing'])->count())->description('Open orders')->descriptionIcon('heroicon-m-clock'),
+            Stat::make('', Order::query()->whereIn('status', ['new', 'processing'])->count())->description('Open orders')->descriptionIcon('heroicon-m-clock'),
             Stat::make('', 'KES ' . $formatNumber((float) Order::query()->avg('total_price')))->description('Average price')->descriptionIcon('heroicon-m-currency-dollar')
         ];
     }
