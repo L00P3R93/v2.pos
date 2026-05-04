@@ -9,6 +9,7 @@ use App\Models\Product;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
@@ -31,7 +32,7 @@ class ProductForm
             ->components([
                 Group::make()
                     ->schema([
-                        Section::make()
+                        Section::make('Product Identity')
                             ->schema([
                                 TextInput::make('name')
                                     ->required()
@@ -43,21 +44,33 @@ class ProductForm
                                         }
 
                                         $set('slug', Str::slug($state));
-                                    }),
+                                    })
+                                    ->columnSpanFull(),
 
                                 TextInput::make('slug')
                                     ->disabled()
                                     ->dehydrated()
                                     ->required()
                                     ->maxLength(255)
-                                    ->unique(Product::class, 'slug', ignoreRecord: true),
+                                    ->unique(Product::class, 'slug', ignoreRecord: true)
+                                    ->helperText('Auto-generated from the product name.'),
 
-                                RichEditor::make('description')
-                                    ->columnSpan('full'),
+                                TextInput::make('sku')
+                                    ->label('SKU')
+                                    ->unique(Product::class, 'sku', ignoreRecord: true)
+                                    ->maxLength(255)
+                                    ->default(fn () => 'SKU-'.strtoupper(Str::random(8)))
+                                    ->helperText('Auto-generated — edit if needed.')
+                                    ->required(),
                             ])
                             ->columns(2),
 
-                        Section::make('Images')
+                        Section::make('Product Description')->schema([
+                            MarkdownEditor::make('description')
+                                ->columnSpan('full'),
+                        ]),
+
+                        Section::make('Product Images')
                             ->schema([
                                 SpatieMediaLibraryFileUpload::make('media')
                                     ->collection('product-images')
@@ -70,61 +83,63 @@ class ProductForm
                             ->collapsible(),
 
                         Section::make('Pricing')
+                            ->description('Set the selling price, compare-at price, and your cost.')
                             ->schema([
                                 TextInput::make('price')
+                                    ->label('Selling Price')
+                                    ->prefix('KES')
                                     ->numeric()
                                     ->rules(['regex:/^\d{1,6}(\.\d{0,2})?$/'])
                                     ->required(),
 
                                 TextInput::make('old_price')
-                                    ->label('Compare at price')
+                                    ->label('Compare-at Price')
+                                    ->prefix('KES')
                                     ->numeric()
                                     ->rules(['regex:/^\d{1,6}(\.\d{0,2})?$/'])
                                     ->required(),
 
                                 TextInput::make('cost')
-                                    ->label('Cost per item')
-                                    ->helperText('Customers won\'t see this price.')
+                                    ->label('Cost per Item')
+                                    ->prefix('KES')
+                                    ->helperText('Never shown to customers.')
                                     ->numeric()
                                     ->rules(['regex:/^\d{1,6}(\.\d{0,2})?$/'])
                                     ->required(),
                             ])
-                            ->columns(2),
+                            ->columns(3),
+
                         Section::make('Inventory')
                             ->schema([
-                                TextInput::make('sku')
-                                    ->label('SKU (Stock Keeping Unit)')
-                                    ->unique(Product::class, 'sku', ignoreRecord: true)
-                                    ->maxLength(255)
-                                    ->required(),
-
                                 TextInput::make('barcode')
-                                    ->label('Barcode (ISBN, UPC, GTIN, etc.)')
+                                    ->label('Barcode (ISBN, UPC, GTIN…)')
                                     ->unique(Product::class, 'barcode', ignoreRecord: true)
                                     ->maxLength(255),
 
                                 TextInput::make('qty')
-                                    ->label('Quantity')
+                                    ->label('Quantity in Stock')
                                     ->numeric()
                                     ->rules(['integer', 'min:0'])
                                     ->required(),
 
                                 TextInput::make('security_stock')
-                                    ->helperText('The safety stock is the limit stock for your products which alerts you if the product stock will soon be out of stock.')
+                                    ->label('Low-Stock Alert Threshold')
+                                    ->helperText('You\'ll be alerted when stock drops to this level.')
                                     ->numeric()
                                     ->rules(['integer', 'min:0'])
                                     ->required(),
                             ])
-                            ->columns(2),
+                            ->columns(3),
 
-                        Section::make('Shipping')
+                        Section::make('Shipping & Returns')
                             ->schema([
-                                Checkbox::make('backorder')
-                                    ->label('This product can be returned'),
-
                                 Checkbox::make('requires_shipping')
-                                    ->label('This product will be shipped'),
+                                    ->label('This product requires shipping'),
+
+                                Checkbox::make('backorder')
+                                    ->label('Allow returns for this product'),
                             ])
+                            ->collapsed()
                             ->columns(2),
                     ])
                     ->columnSpan(['lg' => 2]),
@@ -158,8 +173,8 @@ class ProductForm
                                                         TextInput::make('name')
                                                             ->required()
                                                             ->maxLength(255)
-                                                            ->live(onBlur: true)
-                                                            ->afterStateUpdated(fn (string $operation, $state, Set $set) => $operation === 'create' ? $set('slug', Str::slug($state)) : null),
+                                                            ->live()
+                                                            ->afterStateUpdated(fn ($state, Set $set) => $set('slug', Str::slug($state ?? ''))),
 
                                                         TextInput::make('slug')
                                                             ->disabled()

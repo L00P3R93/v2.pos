@@ -38,13 +38,13 @@ class DatabaseSeeder extends Seeder
         Storage::deleteDirectory('public');
 
         // Seed roles and permissions first
-        $this->command->warn(PHP_EOL . 'Creating Roles and Permissions ...');
+        $this->command->warn(PHP_EOL.'Creating Roles and Permissions ...');
         $this->call(RolesSeeder::class);
         $this->command->info('Roles and Permissions created.');
 
         // Create Admin User
-        $this->command->warn(PHP_EOL . 'Creating Admin User...');
-        $admin = User::updateOrCreate([
+        $this->command->warn(PHP_EOL.'Creating Admin User...');
+        $admin = User::query()->updateOrCreate([
             'name' => 'Sntaks Admin',
             'email' => 'sntaksolutionsltd@gmail.com',
             'phone' => '254727796831',
@@ -57,41 +57,41 @@ class DatabaseSeeder extends Seeder
         $this->command->info("Super Admin {$admin->name} created and assigned to 'Super Admin' role.");
 
         // Create Non-Admin Users
-        $this->command->warn(PHP_EOL . 'Creating Non-Admin Users...');
+        $this->command->warn(PHP_EOL.'Creating Non-Admin Users...');
         $users = $this->withProgressBar(10, fn () => User::factory(1)->create());
         $users->each(function (User $user) {
             $roles = ['Manager', 'Accountant', 'Inventory', 'Sales'];
             $user->assignRole($roles[array_rand($roles)]);
         });
-        $this->command->info('Non-Admin users ' . $users->count() . ' created, assigned roles.');
+        $this->command->info('Non-Admin users '.$users->count().' created, assigned roles.');
 
         // Creating Brands
-        $this->command->warn(PHP_EOL . 'Creating Brands...');
+        $this->command->warn(PHP_EOL.'Creating Brands...');
         $brands = $this->withProgressBar(20, fn () => Brand::factory()->count(20)
             ->has(Address::factory()->count(rand(1, 2)))
             ->create());
         Brand::query()->update(['sort' => new Expression('id')]);
-        $this->command->info('Brands ' . $brands->count() . ' created.');
+        $this->command->info('Brands '.$brands->count().' created.');
 
         // Creating Categories
-        $this->command->warn(PHP_EOL . 'Creating Categories...');
+        $this->command->warn(PHP_EOL.'Creating Categories...');
         $categories = $this->withProgressBar(20, fn () => Category::factory(1)
             ->has(
                 Category::factory()->count(3),
                 'children'
             )->create());
-        $this->command->info('Categories ' . $categories->count() . ' created.');
+        $this->command->info('Categories '.$categories->count().' created.');
 
         // Creating Customers
-        $this->command->warn(PHP_EOL . 'Creating Customers...');
+        $this->command->warn(PHP_EOL.'Creating Customers...');
         $customers = $this->withProgressBar(100, fn () => Customer::factory(1)
             ->has(
                 Address::factory()->count(rand(1, 3)),
             )->create());
-        $this->command->info('Customers ' . $customers->count() . ' created.');
+        $this->command->info('Customers '.$customers->count().' created.');
 
         // Creating Products
-        $this->command->warn(PHP_EOL . 'Creating Products...');
+        $this->command->warn(PHP_EOL.'Creating Products...');
         $products = $this->withProgressBar(50, fn () => Product::factory(1)
             ->sequence(fn ($sequence) => ['brand_id' => $brands->random(1)->first()->id])
             ->hasAttached($categories->random(rand(3, 6)), ['created_at' => now(), 'updated_at' => now()])
@@ -100,10 +100,10 @@ class DatabaseSeeder extends Seeder
                     ->state(fn (array $attributes, Product $product) => ['customer_id' => $customers->random(1)->first()->id])
             )
             ->create());
-        $this->command->info('Products ' . $products->count() . ' created.');
+        $this->command->info('Products '.$products->count().' created.');
 
         // Creating Orders
-        $this->command->warn(PHP_EOL . 'Creating Orders...');
+        $this->command->warn(PHP_EOL.'Creating Orders...');
         $orders = $this->withProgressBar(100, fn () => Order::factory(1)
             ->sequence(fn ($sequence) => ['customer_id' => $customers->random(1)->first()->id])
             ->has(Payment::factory()->count(rand(1, 3)))
@@ -121,7 +121,7 @@ class DatabaseSeeder extends Seeder
                     Action::make('View')->url(OrderResource::getUrl('edit', ['record' => $order])),
                 ])->sendToDatabase($admin);
         }
-        $this->command->info('Orders ' . $orders->count() . ' created.');
+        $this->command->info('Orders '.$orders->count().' created.');
     }
 
     protected function withProgressBar(int $amount, \Closure $createCollectionOfOne): Collection
@@ -129,7 +129,7 @@ class DatabaseSeeder extends Seeder
         $progressBar = new ProgressBar($this->command->getOutput(), $amount);
         $progressBar->start();
 
-        $collection = new Collection();
+        $collection = new Collection;
         foreach (range(1, $amount) as $i) {
             $collection = $collection->merge($createCollectionOfOne());
             $progressBar->advance();

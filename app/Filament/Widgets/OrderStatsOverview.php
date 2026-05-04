@@ -24,18 +24,26 @@ class OrderStatsOverview extends StatsOverviewWidget
             }
 
             if ($number < 1000000) {
-                return Number::format($number / 1000, 2) . 'k';
+                return Number::format($number / 1000, 2).'k';
             }
 
-            return Number::format($number / 1000000, 2) . 'M';
+            return Number::format($number / 1000000, 2).'M';
         };
 
         return [
-            Stat::make('', Order::count())->chart(
-                $orderData->map(fn (TrendValue $value) => $value->aggregate)->toArray()
-            )->color('success')->description('Total Orders')->descriptionIcon('heroicon-m-arrow-trending-up'),
-            Stat::make('', Order::query()->whereIn('status', ['new', 'processing'])->count())->description('Open orders')->descriptionIcon('heroicon-m-clock'),
-            Stat::make('', 'KES ' . $formatNumber((float) Order::query()->avg('total_price')))->description('Average price')->descriptionIcon('heroicon-m-currency-dollar')
+            Stat::make('Total Orders', Order::count())
+                ->chart($orderData->map(fn (TrendValue $value) => $value->aggregate)->toArray())
+                ->color('success')
+                ->description('All-time orders')
+                ->descriptionIcon('heroicon-m-arrow-trending-up'),
+            Stat::make('Open Orders', Order::query()->whereIn('status', ['new', 'processing'])->count())
+                ->description('New & processing')
+                ->descriptionIcon('heroicon-m-clock')
+                ->color('warning'),
+            Stat::make('Avg. Order Value', 'KES '.$formatNumber((int) Order::query()->avg('total_price')))
+                ->description('Average order price')
+                ->descriptionIcon('heroicon-m-currency-dollar')
+                ->color('info'),
         ];
     }
 }

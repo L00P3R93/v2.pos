@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Order;
 use App\Models\Product;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -25,18 +24,26 @@ class ProductStatsOverview extends StatsOverviewWidget
             }
 
             if ($number < 1000000) {
-                return Number::format($number / 1000, 2) . 'k';
+                return Number::format($number / 1000, 2).'k';
             }
 
-            return Number::format($number / 1000000, 2) . 'M';
+            return Number::format($number / 1000000, 2).'M';
         };
 
         return [
-            Stat::make('', Product::query()->count())->chart(
-                $productData->map(fn (TrendValue $value) => $value->aggregate)->toArray()
-            )->color('primary')->description('Total Products')->descriptionIcon('heroicon-m-arrow-trending-up'),
-            Stat::make('', Product::query()->sum('qty'))->description('Product Inventory')->descriptionIcon('heroicon-m-archive-box'),
-            Stat::make('', 'KES ' . $formatNumber((float) Product::query()->avg('price')))->description('Average price')->descriptionIcon('heroicon-m-currency-dollar'),
+            Stat::make('Total Products', Product::query()->count())
+                ->chart($productData->map(fn (TrendValue $value) => $value->aggregate)->toArray())
+                ->color('primary')
+                ->description('Catalogue size')
+                ->descriptionIcon('heroicon-m-arrow-trending-up'),
+            Stat::make('Total Inventory', number_format((int) Product::query()->sum('qty')).' units')
+                ->description('Stock across all products')
+                ->descriptionIcon('heroicon-m-archive-box')
+                ->color('success'),
+            Stat::make('Avg. Product Price', 'KES '.$formatNumber((int) Product::query()->avg('price')))
+                ->description('Mean selling price')
+                ->descriptionIcon('heroicon-m-currency-dollar')
+                ->color('info'),
         ];
     }
 }

@@ -3,17 +3,19 @@
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\IndexController;
 use App\Http\Controllers\OrderController;
+use App\Livewire\UserProfile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
 
-Route::get('/', [\App\Http\Controllers\IndexController::class, 'index']);
+Route::get('/', [IndexController::class, 'index']);
 
-Auth::routes([ 'verify' => true ]);
+Auth::routes(['verify' => true]);
 
 Route::middleware(['auth', 'verified', 'checkSession'])->group(function () {
     Route::get('/home', [HomeController::class, 'index'])->name('home');
+    Route::get('/profile', UserProfile::class)->name('pos.profile');
 
     // Cart routes
     Route::post('/cart/add', [CartController::class, 'addToCart'])->name('cart.add');
@@ -26,5 +28,3 @@ Route::middleware(['auth', 'verified', 'checkSession'])->group(function () {
 
     Route::post('/order/checkout', [OrderController::class, 'store'])->name('order.checkout');
 });
-
-

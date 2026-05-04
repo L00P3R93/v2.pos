@@ -3,15 +3,19 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\Auth\Login;
+use App\Filament\Pages\Dashboard;
 use App\Filament\Widgets\CustomersChart;
+use App\Filament\Widgets\LatestOrdersTable;
 use App\Filament\Widgets\OrdersChart;
 use App\Filament\Widgets\OrderStatsOverview;
+use App\Filament\Widgets\PaymentMethodsChart;
 use App\Filament\Widgets\ProductStatsOverview;
+use App\Filament\Widgets\RevenueStatsOverview;
+use App\Filament\Widgets\TopSellingProductsTable;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use App\Filament\Pages\Dashboard;
 use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -48,19 +52,23 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Dashboard::class,
             ])
-            //->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
+            // ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
+                RevenueStatsOverview::class,
                 ProductStatsOverview::class,
                 OrderStatsOverview::class,
                 CustomersChart::class,
-                OrdersChart::class
+                OrdersChart::class,
+                PaymentMethodsChart::class,
+                LatestOrdersTable::class,
+                TopSellingProductsTable::class,
             ])
             ->navigationGroups([
                 'Dashboard',
                 'Products',
                 'Shop',
                 'User Management',
-                'System Management'
+                'System Management',
             ])
             ->navigationItems([
                 NavigationItem::make('System Logs')

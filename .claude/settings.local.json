@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__laravel-boost__application-info",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\EMILY\\\\Documents\\\\sites\\\\pos\" -Force)",
+      "Bash(Select-Object Name, FullName)",
+      "Bash(grep -E \"\\(Resource\\\\.php|RelationManager|Schemas|Tables\\)$\")",
+      "mcp__laravel-boost__database-schema",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\EMILY\\\\Documents\\\\sites\\\\pos\" -Force | Format-Table Name, @{Name='Type'; Expression={if\\($_.PSIsContainer\\){'Directory'}else{'File'}}} -AutoSize)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\EMILY\\\\Documents\\\\sites\\\\pos\" -Directory -Force)",
+      "Bash(Select-Object Name)",
+      "mcp__laravel-boost__search-docs",
+      "Bash(php artisan *)",
+      "mcp__laravel-boost__get-absolute-url",
+      "mcp__laravel-boost__last-error",
+      "mcp__laravel-boost__browser-logs",
+      "mcp__laravel-boost__tinker",
+      "PowerShell(New-Item *)",
+      "PowerShell(cd \"C:\\\\Users\\\\EMILY\\\\Documents\\\\sites\\\\pos\"; php -r \"require 'vendor/autoload.php'; \\\\$app = require 'bootstrap/app.php'; echo 'Bootstrap OK' . PHP_EOL;\" 2>&1)",
+      "Bash(vendor/bin/pint --dirty --format agent)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "laravel-boost"
+  ]
+}
