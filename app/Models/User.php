@@ -63,8 +63,8 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, MustVerif
 
     public function canAccessPanel(Panel $panel): bool
     {
-        // return ($this->status === UserStatus::Active) && $this->with('roles');
-        return $this->status === UserStatus::Active;
+        return $this->status === UserStatus::Active
+            && $this->hasAnyRole(['Super Admin', 'Admin', 'Manager', 'Accountant', 'Inventory']);
     }
 
     public function getFilamentAvatarUrl(): ?string

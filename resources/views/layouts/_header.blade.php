@@ -71,6 +71,9 @@
                     <hr class="m-0">
                     <a class="dropdown-item" href="#"><i class="me-2" data-feather="user"></i>My Profile</a>
                     <a class="dropdown-item" href="#"><i class="me-2" data-feather="settings"></i>Settings</a>
+                    @if(auth()->user()->hasAnyRole(['Super Admin', 'Admin', 'Manager', 'Accountant', 'Inventory']))
+                    <a class="dropdown-item" href="/admin"><i class="me-2" data-feather="layout"></i>Admin Panel</a>
+                    @endif
                     <hr class="m-0">
                     <a class="dropdown-item logout pb-0" href="{{ route('logout') }}"><img src="{{ asset('assets/img/icons/log-out.svg') }}" class="me-2" alt="img">Logout</a>
                 </div>

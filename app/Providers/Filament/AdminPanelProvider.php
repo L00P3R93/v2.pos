@@ -2,7 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Widgets\CustomersChart;
 use App\Filament\Widgets\LatestOrdersTable;
@@ -12,7 +11,7 @@ use App\Filament\Widgets\PaymentMethodsChart;
 use App\Filament\Widgets\ProductStatsOverview;
 use App\Filament\Widgets\RevenueStatsOverview;
 use App\Filament\Widgets\TopSellingProductsTable;
-use Filament\Http\Middleware\Authenticate;
+use App\Http\Middleware\FilamentAuthenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -37,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login(Login::class)
+            ->login(null)
             ->colors([
                 'primary' => Color::Amber,
                 'secondary' => Color::Gray,
@@ -71,6 +70,11 @@ class AdminPanelProvider extends PanelProvider
                 'System Management',
             ])
             ->navigationItems([
+                NavigationItem::make('Back to POS')
+                    ->url('/home')
+                    ->icon(Heroicon::OutlinedShoppingCart)
+                    ->sort(-1)
+                    ->openUrlInNewTab(),
                 NavigationItem::make('System Logs')
                     ->url('/log-viewer')
                     ->icon(Heroicon::OutlinedDocumentText)
@@ -92,7 +96,7 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                Authenticate::class,
+                FilamentAuthenticate::class,
             ])->plugin(
                 SpatieTranslatablePlugin::make()->defaultLocales(['en', 'es', 'nl'])
             )->spa();

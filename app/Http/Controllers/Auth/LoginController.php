@@ -47,16 +47,14 @@ class LoginController extends Controller
 
     /**
      *  Override default login attempt to add remember_token update
-     * @param Request $request
-     * @return RedirectResponse | bool
      */
-    protected function attemptLogin(Request $request): RedirectResponse | bool
+    protected function attemptLogin(Request $request): RedirectResponse|bool
     {
         $user = User::query()->where($this->username(), $request->{$this->username()})->first();
 
-        if($user) {
+        if ($user) {
             // If user is pending -> redirect them to verification notice
-            if($user->status === UserStatus::Pending) {
+            if ($user->status === UserStatus::Pending) {
                 // Temporarily allow login so they can access verification routes
                 Auth::login($user);
 
@@ -65,7 +63,7 @@ class LoginController extends Controller
             }
 
             // If user is active -> allow login
-            if($user->status === UserStatus::Active) {
+            if ($user->status === UserStatus::Active) {
                 $loginAttempt = $this->guard()->attempt(
                     $this->credentials($request),
                     $request->filled('remember_me')
@@ -73,7 +71,7 @@ class LoginController extends Controller
 
                 if ($loginAttempt) {
                     $user->update([
-                        'remember_token' => Str::random(40)
+                        'remember_token' => Str::random(40),
                     ]);
                 }
 
@@ -88,22 +86,19 @@ class LoginController extends Controller
     {
         $user = User::query()->where($this->username(), $request->{$this->username()})->first();
 
-        if($user and $user->status !== UserStatus::Active)
-        {
+        if ($user and $user->status !== UserStatus::Active) {
             throw ValidationException::withMessages([
                 $this->username() => ['Your account is not active. Please verify your email or contact support.'],
             ]);
         }
 
         throw ValidationException::withMessages([
-            $this->username() => [trans('auth.failed')]
+            $this->username() => [trans('auth.failed')],
         ]);
     }
 
     /**
      *  Override loggedOut behavior
-     * @param Request $request
-     * @return RedirectResponse
      */
     protected function loggedOut(Request $request): RedirectResponse
     {
