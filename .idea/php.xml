@@ -215,6 +215,9 @@
       <path value="$PROJECT_DIR$/vendor/laravel/boost" />
       <path value="$PROJECT_DIR$/vendor/laravel/mcp" />
       <path value="$PROJECT_DIR$/vendor/laravel/roster" />
+      <path value="$PROJECT_DIR$/vendor/spatie/laravel-image-optimizer" />
+      <path value="$PROJECT_DIR$/vendor/intervention/gif" />
+      <path value="$PROJECT_DIR$/vendor/intervention/image" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2" />
