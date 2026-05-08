@@ -17,7 +17,10 @@
       "mcp__laravel-boost__tinker",
       "PowerShell(New-Item *)",
       "PowerShell(cd \"C:\\\\Users\\\\EMILY\\\\Documents\\\\sites\\\\pos\"; php -r \"require 'vendor/autoload.php'; \\\\$app = require 'bootstrap/app.php'; echo 'Bootstrap OK' . PHP_EOL;\" 2>&1)",
-      "Bash(vendor/bin/pint --dirty --format agent)"
+      "Bash(vendor/bin/pint --dirty --format agent)",
+      "Bash(composer show *)",
+      "PowerShell(php artisan make:middleware DetectNPlusOneQueries --no-interaction)",
+      "PowerShell(php artisan make:middleware SetCacheHeaders --no-interaction)"
     ]
   },
   "enableAllProjectMcpServers": true,

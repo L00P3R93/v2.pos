@@ -11,6 +11,12 @@
         showMobileCart: false,
         showProfileMenu: false,
         paymentMethod: null,
+        localCartQtys: {},
+        toasts: [],
+
+        get localCartCount() {
+            return Object.values(this.localCartQtys).reduce((s, q) => s + q, 0);
+        },
 
         toggleDark() {
             this.darkMode = !this.darkMode;
@@ -23,16 +29,52 @@
             $wire.set('paymentMethod', method);
         },
 
+        addToast(message, type = 'success') {
+            const id = Date.now();
+            this.toasts.push({ id, message, type });
+            setTimeout(() => { this.toasts = this.toasts.filter(t => t.id !== id); }, 3500);
+        },
+
         init() {
             document.documentElement.classList.toggle('dark', this.darkMode);
+
+            $wire.on('cart-updated', (data) => {
+                const qtys = {};
+                Object.values(data.items).forEach(item => { qtys[item.id] = item.qty; });
+                this.localCartQtys = qtys;
+            });
+
             $wire.on('order-completed', () => { this.showPaymentModal = false; this.showMobileCart = false; this.paymentMethod = null; });
             $wire.on('customer-created', () => { this.showCustomerModal = false; });
             $wire.on('cart-cleared', () => { this.showResetModal = false; this.showMobileCart = false; });
             $wire.on('cart-saved', () => { this.showSaveCartModal = false; });
             $wire.on('cart-restored', () => { this.showSavedCartsModal = false; });
+
+            $wire.on('toast', (data) => { this.addToast(data.message, data.type); });
         }
     }"
 >
+
+    {{-- ===== TOAST NOTIFICATIONS ===== --}}
+    <div class="fixed top-4 right-4 z-[200] flex flex-col gap-2 pointer-events-none" aria-live="polite">
+        <template x-for="toast in toasts" :key="toast.id">
+            <div
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-x-4"
+                x-transition:enter-end="opacity-100 translate-x-0"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-x-0"
+                x-transition:leave-end="opacity-0 translate-x-4"
+                :class="toast.type === 'success'
+                    ? 'bg-emerald-600 shadow-emerald-600/30'
+                    : 'bg-rose-600 shadow-rose-600/30'"
+                class="pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg text-white text-sm font-medium max-w-xs"
+            >
+                <i :class="toast.type === 'success' ? 'ti ti-circle-check' : 'ti ti-alert-circle'" class="ti text-base flex-none"></i>
+                <span x-text="toast.message" class="flex-1"></span>
+            </div>
+        </template>
+    </div>
 
     {{-- ===== HEADER ===== --}}
     <header class="flex-none flex items-center justify-between px-3 sm:px-4 h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 shadow-sm z-10">
@@ -97,28 +139,43 @@
         {{-- ===== PRODUCTS PANEL ===== --}}
         <section class="flex-1 flex flex-col overflow-hidden min-w-0">
 
-            {{-- Toolbar --}}
-            <div class="flex-none px-3 sm:px-4 pt-3 pb-2.5 bg-gray-100 dark:bg-gray-950">
-                <div class="relative mb-2.5">
+            {{-- Toolbar — stays pinned above the scrolling product grid --}}
+            <div class="flex-none px-3 sm:px-4 pt-3 pb-2.5 bg-gray-100/95 dark:bg-gray-950/95 backdrop-blur-sm border-b border-gray-200/60 dark:border-gray-800/60">
+                {{-- Search with Alpine-driven instant clear button --}}
+                <div
+                    x-data="{ hasSearch: {{ $search ? 'true' : 'false' }} }"
+                    class="relative mb-2.5"
+                >
                     <i class="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
-                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search products..."
-                        class="w-full pl-9 pr-8 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all shadow-sm">
-                    @if($search)
-                        <button wire:click="$set('search','')" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"><i class="ti ti-x text-sm"></i></button>
-                    @endif
+                    <input
+                        type="text"
+                        wire:model.live.debounce.400ms="search"
+                        @input="hasSearch = $event.target.value.length > 0"
+                        placeholder="Search products..."
+                        class="w-full pl-9 pr-10 py-2.5 rounded-xl bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus:border-transparent transition-all shadow-sm"
+                    >
+                    <button
+                        x-show="hasSearch"
+                        x-cloak
+                        @click="hasSearch = false; $wire.set('search', '')"
+                        aria-label="Clear search"
+                        class="absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    >
+                        <i class="ti ti-x text-sm"></i>
+                    </button>
                 </div>
 
                 {{-- Category tabs --}}
                 <div class="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
-                    <button wire:click="setCategory(null)" class="flex-none px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap {{ $activeCategory === null ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800/80 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-indigo-300' }}">All</button>
+                    <button wire:click="setCategory(null)" class="flex-none px-3 py-2 sm:py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 {{ $activeCategory === null ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800/80 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-indigo-300' }}">All</button>
                     @foreach($this->categories as $cat)
-                        <button wire:click="setCategory('{{ $cat->slug }}')" class="flex-none px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap {{ $activeCategory === $cat->slug ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800/80 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-indigo-300' }}">{{ $cat->name }}</button>
+                        <button wire:click="setCategory('{{ $cat->slug }}')" class="flex-none px-3 py-2 sm:py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 {{ $activeCategory === $cat->slug ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white dark:bg-gray-800/80 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700 hover:border-indigo-300' }}">{{ $cat->name }}</button>
                     @endforeach
                 </div>
             </div>
 
-            {{-- Product grid --}}
-            <div class="flex-1 overflow-y-auto pos-products-scroll px-3 sm:px-4 pb-4">
+            {{-- Product grid — extra bottom padding on mobile for the FAB --}}
+            <div class="flex-1 overflow-y-auto pos-products-scroll px-3 sm:px-4 pb-24 sm:pb-4">
                 @if($this->filteredProducts->isEmpty())
                     <div class="flex flex-col items-center justify-center h-full text-center py-16">
                         <div class="w-14 h-14 rounded-2xl bg-gray-200 dark:bg-gray-800 flex items-center justify-center mb-3"><i class="ti ti-package-off text-2xl text-gray-400"></i></div>
@@ -126,7 +183,11 @@
                         @if($search)<button wire:click="$set('search','')" class="mt-2 text-xs text-indigo-500 hover:text-indigo-700">Clear search</button>@endif
                     </div>
                 @else
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2.5 sm:gap-3">
+                    <div
+                        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 sm:gap-3"
+                        wire:loading.class="opacity-50 pointer-events-none"
+                        wire:target="search, setCategory"
+                    >
                         @foreach($this->filteredProducts as $product)
                             @php
                                 $outOfStock = $product->qty <= 0;
@@ -135,50 +196,72 @@
                                 $inCart     = $inCartQty > 0;
                             @endphp
                             <button
-                                wire:click="{{ $outOfStock ? '' : 'addToCart('.$product->id.')' }}"
                                 wire:key="product-{{ $product->id }}"
-                                {{ $outOfStock ? 'disabled' : '' }}
-                                class="product-card group text-left rounded-xl border overflow-hidden transition-all shadow-sm relative
-                                    {{ $outOfStock
-                                        ? 'opacity-60 cursor-not-allowed bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800'
-                                        : ($inCart
-                                            ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-400 dark:border-indigo-500 shadow-indigo-100 dark:shadow-indigo-900/20 shadow-md ring-1 ring-indigo-300 dark:ring-indigo-600/50'
-                                            : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md') }}"
-                            >
-                                {{-- In-cart badge (top-left) --}}
-                                @if($inCart)
-                                    <div class="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-indigo-600 text-white text-[9px] font-bold shadow-sm">
-                                        <i class="ti ti-shopping-cart text-[9px]"></i>{{ $inCartQty }}
-                                    </div>
+                                @if(!$outOfStock)
+                                    @click="localCartQtys[{{ $product->id }}] = (localCartQtys[{{ $product->id }}] ?? 0) + 1; $wire.addToCart({{ $product->id }})"
                                 @endif
+                                {{ $outOfStock ? 'disabled' : '' }}
+                                :class="(localCartQtys[{{ $product->id }}] ?? 0) > 0
+                                    ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-400 dark:border-indigo-500 shadow-indigo-100 dark:shadow-indigo-900/20 shadow-md ring-1 ring-indigo-300 dark:ring-indigo-600/50'
+                                    : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 hover:border-indigo-400 dark:hover:border-indigo-600 hover:shadow-md'"
+                                class="product-card group text-left rounded-xl border overflow-hidden transition-all shadow-sm relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1
+                                    {{ $outOfStock ? 'opacity-60 cursor-not-allowed bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800' : '' }}"
+                            >
+                                {{-- In-cart badge (top-left) — driven by Alpine localCartQtys for instant feedback --}}
+                                <div
+                                    x-show="(localCartQtys[{{ $product->id }}] ?? 0) > 0"
+                                    x-cloak
+                                    class="absolute top-1.5 left-1.5 z-10 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-indigo-600 text-white text-[9px] font-bold shadow-sm"
+                                >
+                                    <i class="ti ti-shopping-cart text-[9px]"></i>
+                                    <span x-text="localCartQtys[{{ $product->id }}] ?? 0"></span>
+                                </div>
 
                                 <div class="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-800">
-                                    @if($product->getFirstMediaUrl('product-images','thumb'))
-                                        <img src="{{ $product->getFirstMediaUrl('product-images','thumb') }}" alt="{{ $product->name }}" class="w-full h-full object-cover {{ $outOfStock ? '' : 'group-hover:scale-105 transition-transform duration-200' }}">
-                                    @else
-                                        <div class="w-full h-full flex items-center justify-center"><i class="ti ti-photo text-3xl text-gray-300 dark:text-gray-700"></i></div>
-                                    @endif
+                                    <x-product-image
+                                        :product="$product"
+                                        size="thumb"
+                                        :imgClass="$outOfStock ? '' : 'group-hover:scale-105 transition-transform duration-200'"
+                                    />
 
                                     @if($outOfStock)
-                                        <div class="absolute inset-0 bg-gray-900/50 flex items-center justify-center">
+                                        <div class="absolute inset-0 bg-gray-900/50 flex items-center justify-center z-10">
                                             <span class="text-[10px] font-bold text-white bg-gray-800/80 px-2 py-1 rounded-full">OUT OF STOCK</span>
                                         </div>
                                     @elseif($lowStock && !$inCart)
-                                        <div class="absolute top-1.5 right-1.5">
+                                        <div class="absolute top-1.5 right-1.5 z-10">
                                             <span class="text-[9px] font-bold text-white bg-amber-500 px-1.5 py-0.5 rounded-full">{{ $product->qty }} left</span>
                                         </div>
                                     @endif
                                 </div>
-                                <div class="p-2 {{ $inCart ? 'bg-indigo-50/80 dark:bg-indigo-950/40' : '' }}">
-                                    <p class="text-[11px] font-semibold truncate leading-snug mb-1 {{ $inCart ? 'text-indigo-900 dark:text-indigo-100' : 'text-gray-900 dark:text-gray-100' }}">{{ $product->name }}</p>
+                                <div
+                                    class="p-2"
+                                    :class="(localCartQtys[{{ $product->id }}] ?? 0) > 0 ? 'bg-indigo-50/80 dark:bg-indigo-950/40' : ''"
+                                >
+                                    <p
+                                        class="text-[11px] font-semibold truncate leading-snug mb-1"
+                                        :class="(localCartQtys[{{ $product->id }}] ?? 0) > 0 ? 'text-indigo-900 dark:text-indigo-100' : 'text-gray-900 dark:text-gray-100'"
+                                    >{{ $product->name }}</p>
                                     <div class="flex items-center justify-between">
-                                        <span class="text-xs font-bold {{ $inCart ? 'text-indigo-600 dark:text-indigo-400' : 'text-emerald-600 dark:text-emerald-400' }}">KES {{ number_format($product->price) }}</span>
-                                        <span class="text-[9px] {{ $inCart ? 'text-indigo-400 dark:text-indigo-500' : 'text-gray-400' }}">{{ $product->qty }} pcs</span>
+                                        <span
+                                            class="text-xs font-bold"
+                                            :class="(localCartQtys[{{ $product->id }}] ?? 0) > 0 ? 'text-indigo-600 dark:text-indigo-400' : 'text-emerald-600 dark:text-emerald-400'"
+                                        >KES {{ number_format($product->price) }}</span>
+                                        <span
+                                            class="text-[9px]"
+                                            :class="(localCartQtys[{{ $product->id }}] ?? 0) > 0 ? 'text-indigo-400 dark:text-indigo-500' : 'text-gray-400'"
+                                        >{{ $product->qty }} pcs</span>
                                     </div>
                                 </div>
                             </button>
                         @endforeach
                     </div>
+
+                    @if($this->filteredProducts->hasPages())
+                        <div class="mt-4 pb-2">
+                            {{ $this->filteredProducts->links() }}
+                        </div>
+                    @endif
                 @endif
             </div>
         </section>
@@ -191,11 +274,19 @@
 
     {{-- ===== MOBILE CART FAB ===== --}}
     <div class="lg:hidden fixed bottom-5 right-5 z-40">
-        <button @click="showMobileCart = true" class="relative w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-xl shadow-indigo-600/40 flex items-center justify-center transition-all">
+        <button
+            @click="showMobileCart = true"
+            aria-label="Open cart"
+            class="relative w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-xl shadow-indigo-600/40 flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-500 focus-visible:ring-offset-2"
+        >
             <i class="ti ti-shopping-cart text-2xl"></i>
-            @if($this->cartCount > 0)
-                <span class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-gray-950">{{ $this->cartCount > 9 ? '9+' : $this->cartCount }}</span>
-            @endif
+            {{-- Badge driven by Alpine localCartCount for instant update --}}
+            <template x-if="localCartCount > 0">
+                <span
+                    x-text="localCartCount > 9 ? '9+' : localCartCount"
+                    class="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-gray-950"
+                ></span>
+            </template>
         </button>
     </div>
 
@@ -228,10 +319,20 @@
                 <div class="w-10 h-1 rounded-full bg-gray-300 dark:bg-gray-700"></div>
             </div>
             <div class="flex items-center justify-between px-4 py-2 flex-none border-b border-gray-100 dark:border-gray-800">
-                <h3 class="font-bold text-gray-900 dark:text-white text-sm">Your Cart</h3>
-                <button @click="showMobileCart = false" class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"><i class="ti ti-x text-sm"></i></button>
+                <div>
+                    <h3 class="font-bold text-gray-900 dark:text-white text-sm leading-tight">Your Cart</h3>
+                    <p class="text-[10px] text-gray-400" x-text="localCartCount > 0 ? localCartCount + ' item' + (localCartCount !== 1 ? 's' : '') : 'Empty'"></p>
+                </div>
+                <button
+                    @click="showMobileCart = false"
+                    aria-label="Close cart"
+                    class="w-11 h-11 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                >
+                    <i class="ti ti-x text-base"></i>
+                </button>
             </div>
-            <div class="flex-1 overflow-y-auto">
+            {{-- flex-col so cart-panel's internal flex-none / flex-1 sections lay out correctly --}}
+            <div class="flex-1 overflow-hidden flex flex-col">
                 @include('livewire.partials.cart-panel')
             </div>
         </div>
@@ -245,7 +346,7 @@
         <div x-show="showCustomerModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:scale-95" class="relative w-full sm:max-w-md bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-2xl shadow-2xl border-0 sm:border border-gray-100 dark:border-gray-800 overflow-hidden">
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800">
                 <h3 class="font-bold text-gray-900 dark:text-white">New Customer</h3>
-                <button @click="showCustomerModal = false" class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"><i class="ti ti-x text-sm"></i></button>
+                <button @click="showCustomerModal = false" aria-label="Close" class="w-11 h-11 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"><i class="ti ti-x text-sm"></i></button>
             </div>
             <div class="px-5 py-4 space-y-3.5">
                 <div>
@@ -289,7 +390,7 @@
                         <p class="text-emerald-200 text-xs font-medium mb-0.5">Order Total</p>
                         <p class="text-2xl font-black">{{ $this->cartTotal }}</p>
                     </div>
-                    <button @click="showPaymentModal = false" class="w-7 h-7 rounded-lg flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors"><i class="ti ti-x text-sm"></i></button>
+                    <button @click="showPaymentModal = false" aria-label="Close" class="w-11 h-11 rounded-xl flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"><i class="ti ti-x text-sm"></i></button>
                 </div>
             </div>
             <div class="px-5 py-4">
@@ -302,7 +403,7 @@
                         ['value'=>'cheque',  'label'=>'Cheque',         'icon'=>'ti-writing',       'color'=>'amber'],
                         ['value'=>'deposit', 'label'=>'Bank Deposit',   'icon'=>'ti-building-bank', 'color'=>'violet'],
                     ] as $m)
-                        <button @click="selectPayment('{{ $m['value'] }}')" :class="paymentMethod==='{{ $m['value'] }}' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 shadow-sm' : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300'" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-sm font-medium transition-all">
+                        <button @click="selectPayment('{{ $m['value'] }}')" :class="paymentMethod==='{{ $m['value'] }}' ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 shadow-sm' : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-gray-300'" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border-2 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
                             <i class="ti {{ $m['icon'] }} text-xl"></i>
                             {{ $m['label'] }}
                             <i x-show="paymentMethod==='{{ $m['value'] }}'" class="ti ti-circle-check ml-auto text-indigo-500 text-lg"></i>
@@ -315,7 +416,14 @@
             </div>
             <div class="flex gap-2.5 px-5 pb-5">
                 <button @click="showPaymentModal = false" class="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button>
-                <button wire:click="checkout" :disabled="!paymentMethod" :class="paymentMethod ? 'bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/25' : 'bg-gray-200 dark:bg-gray-700 cursor-not-allowed text-gray-400'" class="flex-1 py-3 rounded-xl text-white font-bold text-sm transition-all">
+                <button
+                    wire:click="checkout"
+                    wire:loading.attr="disabled"
+                    wire:target="checkout"
+                    :disabled="!paymentMethod"
+                    :class="paymentMethod ? 'bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/25' : 'bg-gray-200 dark:bg-gray-700 cursor-not-allowed text-gray-400'"
+                    class="flex-1 py-3 rounded-xl text-white font-bold text-sm transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                >
                     <span wire:loading.remove wire:target="checkout">Confirm &amp; Pay</span>
                     <span wire:loading wire:target="checkout" class="flex items-center justify-center gap-1.5"><svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Processing…</span>
                 </button>
@@ -333,7 +441,7 @@
                         <p class="text-emerald-200 text-xs font-medium mb-1">{{ now()->format('D, d M Y') }}</p>
                         <h3 class="font-black text-xl">Today's Sales</h3>
                     </div>
-                    <button @click="showSalesModal = false" class="w-7 h-7 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"><i class="ti ti-x text-sm"></i></button>
+                    <button @click="showSalesModal = false" aria-label="Close" class="w-11 h-11 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"><i class="ti ti-x text-sm"></i></button>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-white/15 rounded-xl p-3">
@@ -411,7 +519,7 @@
                     <h3 class="font-bold text-gray-900 dark:text-white">Saved Carts</h3>
                     <p class="text-[11px] text-gray-400 mt-0.5">{{ $this->savedCarts->count() }} saved</p>
                 </div>
-                <button @click="showSavedCartsModal = false" class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"><i class="ti ti-x text-sm"></i></button>
+                <button @click="showSavedCartsModal = false" aria-label="Close" class="w-11 h-11 rounded-xl flex items-center justify-center text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"><i class="ti ti-x text-sm"></i></button>
             </div>
             {{-- Search saved carts --}}
             <div class="flex-none px-4 py-2.5 border-b border-gray-100 dark:border-gray-800">
@@ -429,11 +537,11 @@
                         <div class="flex-1 min-w-0">
                             <p class="text-sm font-bold text-gray-900 dark:text-white truncate">{{ $saved->name }}</p>
                             <p class="text-[10px] text-gray-400">{{ $saved->item_count }} items · KES {{ number_format($saved->total) }}{{ $saved->customer ? ' · '.$saved->customer->name : '' }}</p>
-                            <p class="text-[10px] text-gray-300 dark:text-gray-600">{{ $saved->created_at->diffForHumans() }}</p>
+                            <p class="text-[10px] text-gray-400 dark:text-gray-500">{{ $saved->created_at->format('M j, H:i') }} · <span class="text-gray-300 dark:text-gray-600">{{ $saved->created_at->diffForHumans() }}</span></p>
                         </div>
                         <div class="flex items-center gap-1.5 flex-none">
-                            <button wire:click="restoreCart({{ $saved->id }})" class="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors">Load</button>
-                            <button wire:click="deleteSavedCart({{ $saved->id }})" wire:confirm="Delete this saved cart?" class="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-500 transition-colors">
+                            <button wire:click="restoreCart({{ $saved->id }})" class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1">Load</button>
+                            <button wire:click="deleteSavedCart({{ $saved->id }})" wire:confirm="Delete this saved cart?" aria-label="Delete saved cart" class="w-11 h-11 rounded-xl flex items-center justify-center text-gray-400 hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500">
                                 <i class="ti ti-trash text-xs"></i>
                             </button>
                         </div>
@@ -458,7 +566,12 @@
             <input wire:model="saveCartName" type="text" placeholder="e.g. Table 5, Hold Order" class="w-full px-3 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4">
             <div class="flex gap-2.5">
                 <button @click="showSaveCartModal = false" class="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">Cancel</button>
-                <button wire:click="saveCart" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-colors">
+                <button
+                    wire:click="saveCart"
+                    wire:loading.attr="disabled"
+                    wire:target="saveCart"
+                    class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                >
                     <span wire:loading.remove wire:target="saveCart">Save Cart</span>
                     <span wire:loading wire:target="saveCart">Saving…</span>
                 </button>

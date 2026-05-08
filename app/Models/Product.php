@@ -3,19 +3,21 @@
 namespace App\Models;
 
 use App\Traits\Auditable;
+use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Spatie\Image\Enums\Fit;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Product extends Model implements HasMedia
 {
-    /** @use HasFactory<\Database\Factories\ProductFactory> */
-    use HasFactory, InteractsWithMedia, Auditable;
+    /** @use HasFactory<ProductFactory> */
+    use Auditable, HasFactory, InteractsWithMedia;
 
     protected $table = 'products';
 
@@ -45,6 +47,36 @@ class Product extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('product-images')->useDisk('public');
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->fit(Fit::Crop, 150, 150)
+            ->performOnCollections('product-images');
+
+        $this->addMediaConversion('thumb-webp')
+            ->fit(Fit::Crop, 150, 150)
+            ->format('webp')
+            ->performOnCollections('product-images');
+
+        $this->addMediaConversion('card')
+            ->fit(Fit::Crop, 400, 400)
+            ->performOnCollections('product-images');
+
+        $this->addMediaConversion('card-webp')
+            ->fit(Fit::Crop, 400, 400)
+            ->format('webp')
+            ->performOnCollections('product-images');
+
+        $this->addMediaConversion('full')
+            ->fit(Fit::Contain, 800, 800)
+            ->performOnCollections('product-images');
+
+        $this->addMediaConversion('full-webp')
+            ->fit(Fit::Contain, 800, 800)
+            ->format('webp')
+            ->performOnCollections('product-images');
     }
 
     public function user(): BelongsTo

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SavedCart extends Model
 {
     protected $fillable = [
+        'uuid',
         'user_id',
         'customer_id',
         'name',

@@ -14,16 +14,17 @@
                 <span class="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">{{ $this->cartCount }}</span>
             @endif
         </div>
-        <button @click="showCustomerModal = true" class="flex items-center gap-1 px-2 py-1.5 text-[11px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors">
+        <button @click="showCustomerModal = true" class="flex items-center gap-1 px-3 py-2 sm:px-2 sm:py-1.5 text-[11px] font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
             <i class="ti ti-user-plus text-xs"></i><span class="hidden sm:inline">New</span>
         </button>
     </div>
 
-    {{-- Custom searchable customer dropdown --}}
+    {{-- Custom searchable dropdown (all screen sizes) --}}
     @php
         $customerList = $this->customers->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'phone' => $c->phone ?? '']);
     @endphp
     <div
+        class="relative"
         x-data="{
             open: false,
             search: '',
@@ -48,7 +49,6 @@
             }
         }"
         @click.outside="open = false"
-        class="relative"
     >
         {{-- Trigger --}}
         <button
@@ -152,31 +152,69 @@
 @else
     <div class="flex-1 overflow-y-auto cart-scroll bg-white dark:bg-gray-900">
         @foreach($this->cartItems as $item)
-            <div wire:key="ci-{{ $item->getHash() }}" class="flex items-center gap-2.5 px-4 py-2.5 border-b border-gray-50 dark:border-gray-800/80 hover:bg-gray-50/70 dark:hover:bg-gray-800/30 transition-colors">
+            <div
+                wire:key="ci-{{ $item['id'] }}"
+                x-data="{
+                    qty: {{ (int) $item['qty'] }},
+                    price: {{ (float) $item['price'] }},
+                    productId: {{ (int) $item['id'] }},
+                    decrement() {
+                        if (this.qty <= 1) {
+                            $wire.removeItem(this.productId);
+                        } else {
+                            this.qty--;
+                            $wire.updateItemQty(this.productId, this.qty);
+                        }
+                    },
+                    increment() {
+                        this.qty++;
+                        $wire.updateItemQty(this.productId, this.qty);
+                    },
+                }"
+                x-on:cart-updated.window="
+                    const found = Object.values($event.detail.items).find(i => i.id == productId);
+                    if (found) { qty = found.qty; }
+                "
+                class="flex items-center gap-2.5 px-4 py-2.5 border-b border-gray-50 dark:border-gray-800/80 hover:bg-gray-50/70 dark:hover:bg-gray-800/30 transition-colors"
+            >
                 {{-- Color indicator dot --}}
                 <div class="w-1.5 h-8 rounded-full bg-indigo-400 dark:bg-indigo-600 flex-none opacity-60"></div>
 
                 <div class="flex-1 min-w-0">
-                    <p class="text-[12px] font-semibold text-gray-900 dark:text-gray-100 truncate leading-tight">{{ $item->name }}</p>
-                    <p class="text-[10px] text-gray-400 dark:text-gray-500">KES {{ number_format($item->price) }}</p>
+                    <p class="text-[12px] font-semibold text-gray-900 dark:text-gray-100 truncate leading-tight">{{ $item['name'] }}</p>
+                    <p class="text-[10px] text-gray-400 dark:text-gray-500">KES {{ number_format($item['price']) }}</p>
                 </div>
 
-                {{-- Qty controls --}}
-                <div class="flex items-center gap-1 flex-none">
-                    <button wire:click="decrementItem('{{ $item->getHash() }}', {{ (int)$item->qty }})" class="w-6 h-6 rounded-md flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-rose-100 dark:hover:bg-rose-900/40 hover:text-rose-500 transition-colors">
-                        <i class="ti ti-minus text-[10px]"></i>
+                {{-- Qty controls — optimistic Alpine state, WCAG 44px touch targets on mobile --}}
+                <div class="flex items-center gap-0.5 sm:gap-1 flex-none">
+                    <button
+                        @click="decrement()"
+                        aria-label="Decrease quantity"
+                        class="w-10 h-10 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-rose-100 dark:hover:bg-rose-900/40 hover:text-rose-500 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    >
+                        <i class="ti ti-minus text-xs"></i>
                     </button>
-                    <span class="w-6 text-center text-xs font-black text-gray-900 dark:text-gray-100">{{ (int)$item->qty }}</span>
-                    <button wire:click="incrementItem('{{ $item->getHash() }}', {{ (int)$item->qty }})" class="w-6 h-6 rounded-md flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                        <i class="ti ti-plus text-[10px]"></i>
+                    <span class="w-7 text-center text-xs font-black text-gray-900 dark:text-gray-100" x-text="qty"></span>
+                    <button
+                        @click="increment()"
+                        aria-label="Increase quantity"
+                        class="w-10 h-10 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    >
+                        <i class="ti ti-plus text-xs"></i>
                     </button>
                 </div>
 
-                {{-- Line total --}}
-                <span class="w-16 text-right text-xs font-bold text-gray-800 dark:text-gray-200 flex-none">{{ number_format($item->qty * $item->price) }}</span>
+                {{-- Line total — updates instantly from Alpine qty --}}
+                <span
+                    class="w-14 text-right text-xs font-bold text-gray-800 dark:text-gray-200 flex-none"
+                    x-text="new Intl.NumberFormat().format(Math.round(qty * price))"
+                ></span>
 
-                {{-- Remove — always visible --}}
-                <button wire:click="removeItem('{{ $item->getHash() }}')" class="w-7 h-7 rounded-md flex items-center justify-center text-rose-400 dark:text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 transition-colors flex-none">
+                <button
+                    @click="$wire.removeItem(productId)"
+                    aria-label="Remove item"
+                    class="w-10 h-10 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center text-rose-400 dark:text-rose-500 hover:bg-rose-100 dark:hover:bg-rose-900/30 hover:text-rose-600 transition-colors flex-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                >
                     <i class="ti ti-trash text-xs"></i>
                 </button>
             </div>
@@ -237,7 +275,12 @@
                 <i class="ti ti-device-mobile text-lg"></i>M-PESA
             </button>
         </div>
-        <button @click="showPaymentModal = true" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[0.98] text-white transition-all shadow-lg shadow-emerald-600/25 flex items-center">
+        <button
+            @click="showPaymentModal = true"
+            wire:loading.attr="disabled"
+            wire:target="checkout"
+            class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-[0.98] text-white transition-all shadow-lg shadow-emerald-600/25 flex items-center disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100"
+        >
             <i class="ti ti-cash-banknote text-lg mr-2 flex-none"></i>
             <span class="flex-1 text-center font-black text-sm">Pay {{ $this->cartTotal }}</span>
             <i class="ti ti-arrow-right text-base flex-none opacity-70"></i>

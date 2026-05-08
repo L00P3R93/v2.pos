@@ -9,15 +9,21 @@ use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\SavedCart;
+use App\Services\CartService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Lazy;
 use Livewire\Component;
-use LukePOLO\LaraCart\Facades\LaraCart;
+use Livewire\WithPagination;
 
+#[Lazy]
 class PosInterface extends Component
 {
+    use WithPagination;
+
     public string $search = '';
 
     public ?string $activeCategory = null;
@@ -40,13 +46,44 @@ class PosInterface extends Component
 
     public ?string $errorMessage = null;
 
+    public function placeholder(): string
+    {
+        return <<<'HTML'
+        <div class="flex flex-col h-screen overflow-hidden bg-gray-100 dark:bg-gray-950 animate-pulse">
+            <div class="flex-none h-14 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800"></div>
+            <div class="flex flex-1 overflow-hidden">
+                <div class="flex-1 flex flex-col gap-3 p-4">
+                    <div class="h-10 rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+                    <div class="flex gap-2">
+                        <div class="h-8 w-12 rounded-lg bg-gray-200 dark:bg-gray-800"></div>
+                        <div class="h-8 w-20 rounded-lg bg-gray-200 dark:bg-gray-800"></div>
+                        <div class="h-8 w-16 rounded-lg bg-gray-200 dark:bg-gray-800"></div>
+                        <div class="h-8 w-24 rounded-lg bg-gray-200 dark:bg-gray-800"></div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 pt-1">
+                        <div class="aspect-square rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+                        <div class="aspect-square rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+                        <div class="aspect-square rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+                        <div class="aspect-square rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+                        <div class="aspect-square rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+                        <div class="aspect-square rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+                        <div class="aspect-square rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+                        <div class="aspect-square rounded-xl bg-gray-200 dark:bg-gray-800"></div>
+                    </div>
+                </div>
+                <div class="hidden lg:block w-80 xl:w-[360px] bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800"></div>
+            </div>
+        </div>
+        HTML;
+    }
+
     public function mount(): void
     {
-        $customerId = LaraCart::getAttribute('customer_id');
-        if (is_numeric($customerId)) {
-            $this->selectedCustomerId = (int) $customerId;
-        }
+        $this->selectedCustomerId = $this->cart()->getCustomerId();
+        $this->dispatchCartState();
     }
+
+    // ── Cart mutations ────────────────────────────────────────────────────────
 
     public function addToCart(int $productId): void
     {
@@ -58,12 +95,8 @@ class PosInterface extends Component
             return;
         }
 
-        $inCartQty = 0;
-        foreach (LaraCart::getItems() as $item) {
-            if ((int) $item->id === $productId) {
-                $inCartQty += (int) $item->qty;
-            }
-        }
+        $items = $this->cart()->getItems();
+        $inCartQty = $items[$productId]['qty'] ?? 0;
 
         if ($inCartQty >= $product->qty) {
             $this->errorMessage = "Cannot add more — only {$product->qty} in stock.";
@@ -71,64 +104,56 @@ class PosInterface extends Component
             return;
         }
 
-        LaraCart::add($product->id, $product->name, 1, $product->price);
-        $this->successMessage = null;
+        $this->cart()->add($productId, $product->name, (float) $product->price);
         $this->errorMessage = null;
+        $this->dispatchCartState();
     }
 
-    public function removeItem(string $hash): void
+    public function removeItem(int $productId): void
     {
-        LaraCart::removeItem($hash);
+        $this->cart()->remove($productId);
         $this->errorMessage = null;
+        $this->dispatchCartState();
     }
 
-    public function incrementItem(string $hash, int $currentQty): void
+    public function updateItemQty(int $productId, int $qty): void
     {
-        foreach (LaraCart::getItems() as $item) {
-            if ($item->getHash() === $hash) {
-                $product = Product::query()->find((int) $item->id);
-                if ($product && $currentQty >= $product->qty) {
-                    $this->errorMessage = "Only {$product->qty} in stock.";
+        if ($qty <= 0) {
+            $this->removeItem($productId);
 
-                    return;
-                }
-                break;
-            }
+            return;
         }
 
-        LaraCart::updateItem($hash, 'qty', $currentQty + 1);
-        $this->errorMessage = null;
-    }
+        $product = Product::query()->find($productId);
 
-    public function decrementItem(string $hash, int $currentQty): void
-    {
-        if ($currentQty <= 1) {
-            LaraCart::removeItem($hash);
-        } else {
-            LaraCart::updateItem($hash, 'qty', $currentQty - 1);
+        if ($product && $qty > $product->qty) {
+            $this->errorMessage = "Only {$product->qty} in stock.";
+            $this->dispatchCartState();
+
+            return;
         }
 
+        $this->cart()->update($productId, $qty);
         $this->errorMessage = null;
+        $this->dispatchCartState();
     }
 
     public function clearCart(): void
     {
-        LaraCart::emptyCart();
-        LaraCart::removeAttribute('customer_id');
+        $this->cart()->clear();
         $this->selectedCustomerId = null;
         $this->successMessage = null;
         $this->errorMessage = null;
         $this->dispatch('cart-cleared');
+        $this->dispatchCartState();
     }
 
     public function updatedSelectedCustomerId(?int $value): void
     {
-        if ($value) {
-            LaraCart::setAttribute('customer_id', $value);
-        } else {
-            LaraCart::removeAttribute('customer_id');
-        }
+        $this->cart()->setCustomerId($value);
     }
+
+    // ── Customer ──────────────────────────────────────────────────────────────
 
     public function createCustomer(): void
     {
@@ -147,45 +172,34 @@ class PosInterface extends Component
         ]);
 
         $this->selectedCustomerId = $customer->id;
-        LaraCart::setAttribute('customer_id', $customer->id);
+        $this->cart()->setCustomerId($customer->id);
 
         $this->customerName = $this->customerPhone = $this->customerEmail = $this->customerBirthday = '';
-        $this->successMessage = 'Customer created successfully.';
         $this->dispatch('customer-created');
+        $this->dispatch('toast', message: 'Customer created.', type: 'success');
     }
+
+    // ── Saved carts ───────────────────────────────────────────────────────────
 
     public function saveCart(): void
     {
-        $cartItems = LaraCart::getItems();
+        $items = $this->cart()->getItems();
 
-        if (count($cartItems) === 0) {
+        if (count($items) === 0) {
             $this->errorMessage = 'Nothing to save — cart is empty.';
 
             return;
         }
 
-        $items = [];
-        foreach ($cartItems as $item) {
-            $items[] = [
-                'id' => $item->id,
-                'name' => $item->name,
-                'qty' => (int) $item->qty,
-                'price' => (float) $item->price,
-            ];
-        }
-
-        $customerId = LaraCart::getAttribute('customer_id');
-
-        SavedCart::query()->create([
-            'user_id' => auth()->id(),
-            'customer_id' => is_numeric($customerId) ? (int) $customerId : null,
-            'name' => $this->saveCartName ?: 'Cart '.now()->format('H:i'),
-            'items' => $items,
-        ]);
+        $this->cart()->save(
+            userId: auth()->id(),
+            name: $this->saveCartName ?: 'Cart '.now()->format('H:i'),
+            customerId: $this->selectedCustomerId,
+        );
 
         $this->saveCartName = '';
-        $this->successMessage = 'Cart saved!';
         $this->dispatch('cart-saved');
+        $this->dispatch('toast', message: 'Cart saved!', type: 'success');
     }
 
     public function restoreCart(int $savedCartId): void
@@ -194,22 +208,11 @@ class PosInterface extends Component
             ->where('user_id', auth()->id())
             ->findOrFail($savedCartId);
 
-        LaraCart::emptyCart();
-        LaraCart::removeAttribute('customer_id');
+        $this->cart()->restore($savedCart->items, $savedCart->customer_id);
+        $this->selectedCustomerId = $savedCart->customer_id;
 
-        foreach ($savedCart->items as $item) {
-            LaraCart::add($item['id'], $item['name'], $item['qty'], $item['price']);
-        }
-
-        if ($savedCart->customer_id) {
-            LaraCart::setAttribute('customer_id', $savedCart->customer_id);
-            $this->selectedCustomerId = $savedCart->customer_id;
-        } else {
-            $this->selectedCustomerId = null;
-        }
-
-        $this->successMessage = "Cart '{$savedCart->name}' restored.";
         $this->dispatch('cart-restored');
+        $this->dispatchCartState();
     }
 
     public function deleteSavedCart(int $savedCartId): void
@@ -220,13 +223,15 @@ class PosInterface extends Component
             ->delete();
     }
 
+    // ── Checkout ──────────────────────────────────────────────────────────────
+
     public function checkout(): void
     {
         $this->validate([
             'paymentMethod' => 'required|in:card,cash,cheque,deposit,points',
         ]);
 
-        $cartItems = LaraCart::getItems();
+        $cartItems = $this->cart()->getItems();
 
         if (count($cartItems) === 0) {
             $this->errorMessage = 'Cart is empty.';
@@ -234,8 +239,7 @@ class PosInterface extends Component
             return;
         }
 
-        $customerId = LaraCart::getAttribute('customer_id');
-        $customerId = is_numeric($customerId) ? (int) $customerId : null;
+        $customerId = $this->selectedCustomerId;
 
         try {
             DB::transaction(function () use ($customerId, $cartItems) {
@@ -256,9 +260,9 @@ class PosInterface extends Component
                 $total = $sort = 0;
 
                 foreach ($cartItems as $cartItem) {
-                    $productId = (int) $cartItem->id;
-                    $qty = (int) $cartItem->qty;
-                    $unitPrice = (float) $cartItem->price;
+                    $productId = (int) $cartItem['id'];
+                    $qty = (int) $cartItem['qty'];
+                    $unitPrice = (float) $cartItem['price'];
 
                     if ($qty <= 0) {
                         continue;
@@ -302,15 +306,14 @@ class PosInterface extends Component
                     'currency' => $currency,
                 ]);
 
-                LaraCart::emptyCart();
-                LaraCart::removeAttribute('customer_id');
-
+                $this->cart()->clear();
                 $this->selectedCustomerId = null;
                 $this->paymentMethod = '';
                 $this->successMessage = "Order {$order->number} completed!";
                 $this->errorMessage = null;
 
                 $this->dispatch('order-completed');
+                $this->dispatchCartState();
             });
         } catch (\Exception $e) {
             $this->errorMessage = $e->getMessage();
@@ -318,31 +321,50 @@ class PosInterface extends Component
         }
     }
 
+    // ── Search / category ─────────────────────────────────────────────────────
+
     public function updatedSearch(): void
     {
         $this->activeCategory = null;
+        $this->resetPage();
     }
 
     public function setCategory(?string $slug): void
     {
         $this->activeCategory = $slug;
         $this->search = '';
+        $this->resetPage();
     }
+
+    // ── Computed properties ───────────────────────────────────────────────────
 
     #[Computed]
     public function filteredProducts()
     {
-        $query = Product::query()->where('is_visible', 1)->has('categories');
+        $version = Cache::get('pos.products.version', 0);
+        $cacheKey = implode('.', [
+            'pos.products',
+            $version,
+            $this->activeCategory ?? 'all',
+            md5($this->search),
+            $this->getPage(),
+        ]);
 
-        if ($this->activeCategory) {
-            $query->whereHas('categories', fn ($q) => $q->where('slug', $this->activeCategory));
-        }
-
-        if ($this->search) {
-            $query->where('name', 'like', '%'.$this->search.'%');
-        }
-
-        return $query->limit(24)->get();
+        return Cache::remember($cacheKey, 300, function () {
+            return Product::query()
+                ->where('is_visible', 1)
+                ->has('categories')
+                ->with(['media' => fn ($q) => $q->where('collection_name', 'product-images')])
+                ->when(
+                    $this->activeCategory,
+                    fn ($q) => $q->whereHas('categories', fn ($q) => $q->where('slug', $this->activeCategory))
+                )
+                ->when(
+                    $this->search,
+                    fn ($q) => $q->where('name', 'like', '%'.$this->search.'%')
+                )
+                ->paginate(24);
+        });
     }
 
     #[Computed]
@@ -357,19 +379,21 @@ class PosInterface extends Component
         return Customer::query()->orderBy('name')->get();
     }
 
+    /** @return array<int, array{id:int, name:string, price:float, qty:int}> */
     #[Computed]
-    public function cartItems()
+    public function cartItems(): array
     {
-        return LaraCart::getItems();
+        return $this->cart()->getItems();
     }
 
+    /** @return array<int, int> Map of product ID → qty in cart */
     #[Computed]
     public function cartProductQtys(): array
     {
         $qtys = [];
-        foreach (LaraCart::getItems() as $item) {
-            $id = (int) $item->id;
-            $qtys[$id] = ($qtys[$id] ?? 0) + (int) $item->qty;
+
+        foreach ($this->cart()->getItems() as $productId => $item) {
+            $qtys[(int) $productId] = $item['qty'];
         }
 
         return $qtys;
@@ -378,19 +402,19 @@ class PosInterface extends Component
     #[Computed]
     public function cartTotal(): string
     {
-        return 'KES '.number_format((float) LaraCart::total(false));
+        return 'KES '.number_format($this->cart()->getTotal());
     }
 
     #[Computed]
     public function cartSubtotal(): string
     {
-        return 'KES '.number_format((float) LaraCart::subTotal(false));
+        return 'KES '.number_format($this->cart()->getTotal());
     }
 
     #[Computed]
     public function cartCount(): int
     {
-        return count(LaraCart::getItems());
+        return $this->cart()->getCount();
     }
 
     #[Computed]
@@ -445,5 +469,18 @@ class PosInterface extends Component
     public function render(): View
     {
         return view('livewire.pos-interface');
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private function cart(): CartService
+    {
+        return app(CartService::class);
+    }
+
+    /** Push the current server cart state to Alpine so optimistic UI stays in sync. */
+    private function dispatchCartState(): void
+    {
+        $this->dispatch('cart-updated', items: $this->cart()->getItems());
     }
 }
